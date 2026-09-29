@@ -66,13 +66,29 @@ function NoulChart({ answer }: { answer: Extract<Answer, { type: "noul" }> }) {
 
 /* ------------------------------------------------------------------ choice */
 
-function ChoiceChart({ answer }: { answer: Extract<Answer, { type: "choice" }> }) {
-  const entries = Object.entries(answer.probabilities).sort((a, b) => b[1] - a[1]);
+function ChoiceChart({
+  answer,
+  labels = {},
+}: {
+  answer: Extract<Answer, { type: "choice" }>;
+  labels?: Record<string, string>;
+}) {
+  // Bars are labelled with the words the reader typed, not the English the
+  // model keyed its answer on. `winnerKey` stays the original so the
+  // highlighted bar is still the one JEV chose.
+  const entries = Object.entries(answer.probabilities)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, p]) => [labels[k] ?? k, p] as [string, number]);
 
   const { data, layout, height } = useMemo(() => {
     // Plotly draws the first y-category at the bottom, so reverse the
     // already-descending list to keep the winner on top.
     const rows = [...entries].reverse();
+    // Below ~14% there is no room for a figure inside the bar, so those rows
+    // put it just past the end. The two lists below stay index-aligned with
+    // `rows`; plotly accepts arrays for both.
+    const WIDE_ENOUGH = 14;
+    const inside = rows.map(([, p]) => p * 100 >= WIDE_ENOUGH);
     const d: Data[] = [
       {
         type: "bar",
@@ -80,17 +96,34 @@ function ChoiceChart({ answer }: { answer: Extract<Answer, { type: "choice" }> }
         x: rows.map(([, p]) => p * 100),
         y: rows.map(([label]) => label),
         marker: {
-          color: rows.map(([label]) => (label === answer.choice ? PLOT.signal : PLOT.ink)),
+          color: rows.map(
+            ([label]) => (label === (labels[answer.choice] ?? answer.choice) ? PLOT.signal : PLOT.ink)
+          ),
           line: { color: PLOT.paper, width: 1 },
         },
+        text: rows.map(([, p]) => `${(p * 100).toFixed(1)}%`),
+        textposition: rows.map((_, i) => (inside[i] ? "inside" : "outside")),
+        textfont: {
+          size: 11.5,
+          // Ink outside the bar, paper inside it. Indexed to match the rows.
+          color: rows.map((_, i) => (inside[i] ? PLOT.paper : PLOT.inkSoft)),
+        },
+        insidetextanchor: "end",
+        // Outside labels would be clipped by the fixed 0-100 range otherwise.
+        cliponaxis: false,
         hovertemplate: "%{y}<br>%{x:.1f}%<extra></extra>",
       },
     ];
+    // The value rides on the bar, so the row needs no strip of text beneath
+    // it. `outside` would need headroom to the right of a full-width bar, and
+    // the axis is fixed at 100 — so labels go inside the bar, which also keeps
+    // each figure attached to the thing it measures.
     const l: Layout = {
       ...BASE_LAYOUT,
       bargap: 0.34,
-      margin: { ...MARGIN, l: 4, r: 4, b: 22 },
-      xaxis: { ...axisCommon(), range: [0, 100], dtick: 25 },
+      // Right margin is the widest label: "100.0%" on one line of text.
+      margin: { ...MARGIN, l: 4, r: 44, b: 22 },
+      xaxis: { ...axisCommon(), range: [0, 100], dtick: 25, ticksuffix: "%" },
       yaxis: {
         showgrid: false,
         zeroline: false,
@@ -99,8 +132,8 @@ function ChoiceChart({ answer }: { answer: Extract<Answer, { type: "choice" }> }
         tickfont: { size: 11.5, color: PLOT.inkSoft },
       },
     };
-    return { data: d, layout: l, height: Math.max(120, entries.length * 34 + 46) };
-  }, [entries, answer.choice]);
+    return { data: d, layout: l, height: Math.max(96, entries.length * 30 + 40) };
+  }, [entries, answer.choice, labels]);
 
   const summary = entries
     .map(([label, p]) => `${label} ${pct(p)}`)
@@ -122,11 +155,23 @@ function ScoreChart({ answer }: { answer: Extract<Answer, { type: "score" }> }) 
   const levels = Object.entries(answer.legend).sort((a, b) => Number(a[0]) - Number(b[0]));
 
   const { data, layout, height } = useMemo(() => {
+    const mass = levels.map(([idx]) => (answer.probabilities[idx] ?? 0) * 100);
+    // Same rule as the choice chart: a label inside where it fits, past the
+    // end where it does not.
+    const WIDE_ENOUGH = 14;
+    const inside = mass.map((v) => v >= WIDE_ENOUGH);
     const d: Data[] = [
       {
         type: "bar",
         x: levels.map(([idx]) => Number(idx)),
-        y: levels.map(([idx]) => (answer.probabilities[idx] ?? 0) * 100),
+        y: mass,
+        text: mass.map((v) => `${v.toFixed(1)}%`),
+        textposition: inside.map((ok) => (ok ? "inside" : "outside")),
+        textfont: {
+          size: 11,
+          color: inside.map((ok) => (ok ? PLOT.paper : PLOT.inkSoft)),
+        },
+        cliponaxis: false,
         marker: {
           color: levels.map((_, i) =>
             i === Math.round(answer.score) ? PLOT.signal : PLOT.ink,
@@ -139,7 +184,9 @@ function ScoreChart({ answer }: { answer: Extract<Answer, { type: "score" }> }) 
     const l: Layout = {
       ...BASE_LAYOUT,
       bargap: 0.28,
-      margin: { ...MARGIN, t: 10 },
+      // Top margin is the tallest inside-label; the right edge is the last
+      // level's outside-label.
+      margin: { ...MARGIN, t: 14, r: 30 },
       xaxis: {
         ...axisCommon(),
         showgrid: false,
@@ -181,7 +228,7 @@ function ScoreChart({ answer }: { answer: Extract<Answer, { type: "score" }> }) 
         },
       ],
     };
-    return { data: d, layout: l, height: 240 };
+    return { data: d, layout: l, height: 212 };
   }, [levels, answer.probabilities, answer.score]);
 
   const summary = levels
@@ -200,8 +247,15 @@ function ScoreChart({ answer }: { answer: Extract<Answer, { type: "score" }> }) 
 
 /* ---------------------------------------------------------------- dispatch */
 
-export default function DecisionChart({ answer }: { answer: Answer }) {
+export default function DecisionChart({
+  answer,
+  labels = {},
+}: {
+  answer: Answer;
+  /** English option labels mapped back to what the reader wrote. */
+  labels?: Record<string, string>;
+}) {
   if (answer.type === "noul") return <NoulChart answer={answer} />;
-  if (answer.type === "choice") return <ChoiceChart answer={answer} />;
+  if (answer.type === "choice") return <ChoiceChart answer={answer} labels={labels} />;
   return <ScoreChart answer={answer} />;
 }

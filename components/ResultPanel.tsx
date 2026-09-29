@@ -59,34 +59,21 @@ function ChoiceView({
   const raw = Object.entries(answer.probabilities).sort((a, b) => b[1] - a[1]);
   const entries = raw.map(([k, p]) => [name(k), p] as [string, number]);
   const winner = name(answer.choice);
+  // Looked up under the original key, not the mapped label.
+  const winnerP = answer.probabilities[answer.choice] ?? 0;
   return (
     <>
       <SectionLabel meta={`${entries.length} options`}>Distribution</SectionLabel>
+      {/* Every figure is printed on its own bar, so the table that used to sit
+          underneath was saying the same numbers twice. The chart carries the
+          full breakdown in its aria-label, which is where a screen reader and
+          a copy-paste of the SVG both find them now. */}
       <div className="mt-3">
-        <DecisionChart answer={answer} />
+        <DecisionChart answer={answer} labels={labelMap} />
       </div>
-      {/* Text twin of the chart: precise, selectable, and the accessible path. */}
-      <dl className="mt-3 flex flex-col">
-        {entries.map(([label, p]) => {
-          const isWinner = label === winner;
-          return (
-            <div key={label} className="flex items-baseline gap-3 py-2">
-              <dt className={`min-w-0 flex-1 text-row ${isWinner ? "font-medium text-ink" : "text-ink-soft"}`}>
-                {isWinner && (
-                  <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 shrink-0 translate-y-[-1px] bg-signal" />
-                )}
-                <span className="break-words">{label}</span>
-              </dt>
-              <dd className="tnum shrink-0 font-mono text-[15px] text-ink-soft">
-                {pct(p, 1)}
-                {isWinner && (
-                  <span className="ml-1.5 text-[10px] tracking-[0.14em] text-signal uppercase">sel</span>
-                )}
-              </dd>
-            </div>
-          );
-        })}
-      </dl>
+      <p className="tnum mt-1.5 font-mono text-meta text-ink-faint">
+        selected: {winner} · {pct(winnerP, 1)}
+      </p>
       <Confidence value={answer.confidence} i={i} />
     </>
   );
@@ -103,25 +90,20 @@ function ScoreView({ answer, i }: { answer: Extract<Answer, { type: "score" }>; 
         <div className="mt-1">
           <DecisionChart answer={answer} />
         </div>
-        <ul className="mt-2 flex flex-col divide-y divide-transparent">
-          {levels.map(([idx, desc], k) => {
-            const p = answer.probabilities[idx] ?? 0;
-            const isPeak = k === Math.round(answer.score);
-            return (
-              <li
-                key={idx}
-                className="flex items-baseline gap-3 py-2"
-              >
-                <span className="tnum w-4 shrink-0 text-right font-mono text-[12px] text-ink-faint">
-                  {idx}
-                </span>
-                <span className={`min-w-0 flex-1 text-row ${isPeak ? "font-medium text-ink" : "text-ink-soft"}`}>
-                  {desc}
-                </span>
-                <span className="tnum shrink-0 font-mono text-[15px] text-ink">{pct(p)}</span>
-              </li>
-            );
-          })}
+        {/* The scale's own words, kept as text: the chart's ticks carry the
+            level numbers, not what the levels mean, so this is not a duplicate
+            of the bars — it is the legend. */}
+        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+          {levels.map(([idx, desc], k) => (
+            <li
+              key={idx}
+              className={`tnum font-mono text-[12px] ${
+                k === Math.round(answer.score) ? "text-signal" : "text-ink-faint"
+              }`}
+            >
+              {idx} {desc}
+            </li>
+          ))}
         </ul>
       </div>
       <Confidence value={answer.confidence} i={i} />
