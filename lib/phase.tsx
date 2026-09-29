@@ -90,7 +90,12 @@ export function useStages(
 ): Stage {
   // `stages` comes from a module constant, so it is safe to leave out of the
   // dependency lists below.
-  const [order, setOrder] = useState<string[]>(() => shuffle(stages));
+  //
+  // The initial order is the stages as written, NOT a shuffle. A lazy
+  // initialiser runs during render on the server and again on the client, and
+  // two different shuffles would be a hydration mismatch. The shuffle happens
+  // in an effect instead, where only the browser is involved.
+  const [order, setOrder] = useState<string[]>(() => [...stages]);
   const [revealed, setRevealed] = useState<string[]>([]);
   const wasActive = useRef(false);
 

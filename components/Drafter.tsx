@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Field, InkButton, Notice } from "./primitives";
 import { DRAFT_STAGES, StageList, useStages } from "@/lib/phase";
 import type { Question } from "@/lib/validate";
@@ -35,7 +35,6 @@ export default function Drafter({
   const [phase, setPhase] = useState<"idle" | "drafting" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [drafted, setDrafted] = useState(false);
-  const startedAt = useRef(Date.now());
 
   const busy = phase === "drafting";
   const stage = useStages(DRAFT_STAGES, busy);
@@ -76,10 +75,6 @@ export default function Drafter({
       });
       setDrafted(true);
       setPhase("idle");
-      // The form is the artefact that matters now. Starting the clock over
-      // stops the author's typing from looking like they have been sitting on
-      // the composer since they first arrived.
-      startedAt.current = Date.now();
     } catch {
       setMessages(messages);
       setInput(text);
@@ -99,7 +94,7 @@ export default function Drafter({
   return (
     <section
       aria-labelledby="drafter-label"
-      className="flex flex-col gap-5 border-t-2 border-ink pt-6"
+      className="flex flex-col gap-5 pt-1"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2

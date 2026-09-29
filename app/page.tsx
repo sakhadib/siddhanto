@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LIMITS, type Question } from "@/lib/validate";
 import type { Answer, JevUsage } from "@/lib/jev";
 import ResultPanel, { EmptyState, LoadingState } from "@/components/ResultPanel";
@@ -27,6 +27,8 @@ interface ApiResult {
 
 /** Four uppercase hex characters. A label, not an identifier — nothing is
  *  recorded under it; it only marks the current sitting for the author. */
+const EMPTY_SESSION = "····";
+
 function newSessionId(): string {
   const b = new Uint8Array(2);
   crypto.getRandomValues(b);
@@ -53,7 +55,13 @@ export default function Home() {
   // A client-side handle for "start over". It remounts the input rail, which
   // is what actually clears the drafting transcript — the component owns that
   // state and nothing outside it can reach in.
-  const [session, setSession] = useState(() => newSessionId());
+  //
+  // It must not be randomised during render: the server and the client would
+  // each produce a different id, and the visible one is rendered as text in
+  // the Input label, so the two trees would disagree and React would throw the
+  // server HTML away. It is a placeholder until the effect below runs.
+  useEffect(() => setSession(newSessionId()), []);
+  const [session, setSession] = useState(EMPTY_SESSION);
   const decideStage = useStages(DECIDE_STAGES, loading);
 
   /** A drafted form is a proposal. It lands in the same state a hand-typed one
