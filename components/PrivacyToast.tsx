@@ -29,25 +29,31 @@ export default function PrivacyToast() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg sm:inset-x-auto sm:right-6 sm:bottom-6 sm:mx-0"
+      className="rise fixed inset-x-4 bottom-4 z-50 border border-rule-strong bg-paper-raised p-4 shadow-panel sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-80"
     >
-      <p className="flex-1 text-xs leading-relaxed text-zinc-600">
-        By using Siddhanto you agree to our{" "}
-        <a href="/privacy" className="font-medium text-red-600 underline">
-          Privacy &amp; Data policy
-        </a>
-        .
+      <div className="flex items-baseline justify-between gap-3 border-b border-rule pb-2">
+        <p className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+          Before you begin
+        </p>
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Dismiss privacy notice"
+          className="press -mt-0.5 px-1 font-mono text-sm leading-none text-ink-ghost hover:text-signal"
+        >
+          ×
+        </button>
+      </div>
+      <p className="mt-2.5 text-[12px] leading-relaxed text-ink-soft">
+        Every submission is recorded, including the ones the model rejects. Read the{" "}
+        <a
+          href="/privacy"
+          className="text-ink underline decoration-rule-strong underline-offset-4 hover:decoration-signal"
+        >
+          privacy &amp; data policy
+        </a>{" "}
+        to see exactly what is kept.
       </p>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Dismiss privacy notice"
-        className="shrink-0 rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <path d="M1 1l12 12M13 1L1 13" />
-        </svg>
-      </button>
     </div>
   );
 }

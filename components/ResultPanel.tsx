@@ -1,112 +1,164 @@
 import type { Answer, JevUsage } from "@/lib/jev";
+import DecisionChart from "@/components/DecisionChart";
+import { Axis, MeasureBar, Readout, SectionLabel, pct } from "@/components/primitives";
 
-function pct(p: number): string {
-  return `${(p * 100).toFixed(1)}%`;
-}
+/* ==========================================================================
+   Readout surface. Each answer pairs a Plotly chart with the exact figures in
+   text — the chart carries hover and shape, the text stays selectable,
+   screen-readable and legible without a pointer.
+   ========================================================================== */
 
-function ConfidenceGauge({ value }: { value: number }) {
+function Confidence({ value, i }: { value: number; i: number }) {
   return (
-    <div className="mt-3">
-      <div className="flex items-center justify-between text-xs text-zinc-500">
-        <span>Confidence</span>
-        <span className="font-mono">{pct(value)}</span>
+    <div className="mt-5 border-t border-rule pt-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+          Confidence
+        </span>
+        <span className="tnum font-mono text-[13px] text-ink-soft">{pct(value)}</span>
       </div>
-      <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200">
-        <div
-          className="h-1.5 rounded-full bg-red-500 transition-all"
-          style={{ width: `${Math.min(100, Math.max(0, value * 100))}%` }}
-        />
+      <div className="mt-2">
+        <MeasureBar value={value} i={i} showAxis={false} />
       </div>
-      <p className="mt-1 text-[10px] text-zinc-400">
-        Confidence summarizes the whole distribution — it is not the probability of the winning option.
+      <p className="mt-2 max-w-[46ch] text-[11px] leading-relaxed text-ink-faint">
+        Confidence summarises the whole distribution. It is not the probability of the
+        winning option.
       </p>
     </div>
   );
 }
 
-function NoulBar({ answer }: { answer: Extract<Answer, { type: "noul" }> }) {
-  const p = answer.noul;
+function NoulView({ answer, i }: { answer: Extract<Answer, { type: "noul" }>; i: number }) {
   return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">Probability true</span>
-        <span className="text-3xl font-bold tabular-nums text-zinc-900">{pct(p)}</span>
+    <>
+      <Readout label="Probability true" value={pct(answer.noul)} i={i} />
+      <div className="mt-4">
+        <DecisionChart answer={answer} />
+        <Axis />
+        <p className="tnum mt-2 font-mono text-[10px] text-ink-ghost">
+          noul = {answer.noul.toFixed(4)} · no confidence is returned for noul
+        </p>
       </div>
-      <div className="mt-2 h-3 w-full rounded-full bg-zinc-200">
-        <div
-          className="h-3 rounded-full bg-emerald-500 transition-all"
-          style={{ width: `${Math.min(100, Math.max(0, p * 100))}%` }}
-        />
-      </div>
-      <p className="mt-1 text-[10px] text-zinc-400">noul = {p.toFixed(4)}</p>
-    </div>
+    </>
   );
 }
 
-function ChoiceChart({ answer }: { answer: Extract<Answer, { type: "choice" }> }) {
+function ChoiceView({ answer, i }: { answer: Extract<Answer, { type: "choice" }>; i: number }) {
   const entries = Object.entries(answer.probabilities).sort((a, b) => b[1] - a[1]);
   return (
-    <div>
-      <div className="mb-2 text-sm text-zinc-700">
-        Decision: <span className="font-semibold text-red-600">{answer.choice}</span>
+    <>
+      <SectionLabel meta={`${entries.length} options`}>Distribution</SectionLabel>
+      <div className="mt-3">
+        <DecisionChart answer={answer} />
       </div>
-      <div className="space-y-2">
+      {/* Text twin of the chart: precise, selectable, and the accessible path. */}
+      <dl className="mt-3 flex flex-col">
         {entries.map(([label, p]) => {
           const isWinner = label === answer.choice;
           return (
-            <div key={label}>
-              <div className="flex justify-between text-xs">
-                <span className={isWinner ? "font-semibold text-red-600" : "text-zinc-600"}>{label}</span>
-                <span className="font-mono text-zinc-500">{pct(p)}</span>
-              </div>
-              <div className="mt-0.5 h-2 w-full rounded-full bg-zinc-200">
-                <div
-                  className={`h-2 rounded-full transition-all ${isWinner ? "bg-red-500" : "bg-zinc-400"}`}
-                  style={{ width: `${Math.min(100, Math.max(0, p * 100))}%` }}
-                />
-              </div>
+            <div key={label} className="flex items-baseline gap-3 border-b border-rule py-1.5 last:border-b-0">
+              <dt className={`min-w-0 flex-1 text-[13px] leading-snug ${isWinner ? "font-medium text-ink" : "text-ink-soft"}`}>
+                {isWinner && (
+                  <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 shrink-0 translate-y-[-1px] bg-signal" />
+                )}
+                <span className="break-words">{label}</span>
+              </dt>
+              <dd className="tnum shrink-0 font-mono text-[13px] text-ink-soft">
+                {pct(p, 1)}
+                {isWinner && (
+                  <span className="ml-1.5 text-[9px] tracking-widest text-signal uppercase">sel</span>
+                )}
+              </dd>
             </div>
           );
         })}
+      </dl>
+      <Confidence value={answer.confidence} i={i} />
+    </>
+  );
+}
+
+function ScoreView({ answer, i }: { answer: Extract<Answer, { type: "score" }>; i: number }) {
+  const levels = Object.entries(answer.legend).sort((a, b) => Number(a[0]) - Number(b[0]));
+  const max = Math.max(1, levels.length - 1);
+  return (
+    <>
+      <Readout label="Expected score" value={answer.score.toFixed(3)} i={i} />
+      <div className="mt-4">
+        <SectionLabel meta={`scale 0–${max}`}>Mass by level</SectionLabel>
+        <div className="mt-1">
+          <DecisionChart answer={answer} />
+        </div>
+        <ul className="mt-2 flex flex-col">
+          {levels.map(([idx, desc], k) => {
+            const p = answer.probabilities[idx] ?? 0;
+            const isPeak = k === Math.round(answer.score);
+            return (
+              <li
+                key={idx}
+                className="flex items-baseline gap-3 border-b border-rule py-1.5 last:border-b-0"
+              >
+                <span className="tnum w-4 shrink-0 text-right font-mono text-[10px] text-ink-ghost">
+                  {idx}
+                </span>
+                <span className={`min-w-0 flex-1 text-[13px] leading-snug ${isPeak ? "text-ink" : "text-ink-soft"}`}>
+                  {desc}
+                </span>
+                <span className="tnum shrink-0 font-mono text-[13px] text-ink">{pct(p)}</span>
+              </li>
+            );
+          })}
+        </ul>
       </div>
-      <ConfidenceGauge value={answer.confidence} />
+      <Confidence value={answer.confidence} i={i} />
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ states */
+
+function EmptyState() {
+  return (
+    <div className="rise flex flex-col justify-center py-10">
+      <p className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+        Awaiting input
+      </p>
+      <p className="mt-3 max-w-[38ch] text-[15px] leading-relaxed text-ink-soft">
+        Describe a situation on the left and add at least one query. The model answers with
+        a probability, a distribution, or an expected value — each read against the same
+        0–100 scale.
+      </p>
+      <div className="mt-6 opacity-40" aria-hidden>
+        <MeasureBar value={0.0} showAxis={false} />
+        <Axis />
+      </div>
     </div>
   );
 }
 
-function ScoreScale({ answer }: { answer: Extract<Answer, { type: "score" }> }) {
-  const levels = Object.entries(answer.legend).sort((a, b) => Number(a[0]) - Number(b[0]));
+function LoadingState() {
   return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">Expected score</span>
-        <span className="text-3xl font-bold tabular-nums text-zinc-900">{answer.score.toFixed(2)}</span>
+    <div className="flex flex-col justify-center py-10" role="status" aria-live="polite">
+      <p className="font-mono text-[10px] tracking-[0.18em] text-signal uppercase">Reading…</p>
+      <div className="relative mt-4 h-10 w-32 overflow-hidden border-y border-rule bg-paper-sunk sweep" aria-hidden>
+        <span className="absolute inset-x-0 bottom-0 h-px bg-rule-strong" />
       </div>
-      <div className="mt-3 space-y-2">
-        {levels.map(([idx, desc]) => {
-          const p = answer.probabilities[idx] ?? 0;
-          return (
-            <div key={idx}>
-              <div className="flex justify-between gap-2 text-xs">
-                <span className="text-zinc-600">
-                  <span className="font-mono text-zinc-400">{idx}.</span> {desc}
-                </span>
-                <span className="shrink-0 font-mono text-zinc-500">{pct(p)}</span>
-              </div>
-              <div className="mt-0.5 h-2 w-full rounded-full bg-zinc-200">
-                <div
-                  className="h-2 rounded-full bg-violet-500 transition-all"
-                  style={{ width: `${Math.min(100, Math.max(0, p * 100))}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
+      <div className="mt-6 flex flex-col gap-3" aria-hidden>
+        {[0, 1].map((k) => (
+          <div key={k}>
+            <div className="h-2.5 border-y border-rule bg-paper-sunk" />
+            <Axis labels={false} />
+          </div>
+        ))}
       </div>
-      <ConfidenceGauge value={answer.confidence} />
+      <p className="mt-5 font-mono text-[11px] text-ink-faint">
+        The model is weighing the state against each query.
+      </p>
     </div>
   );
 }
+
+/* -------------------------------------------------------------------- panel */
 
 export default function ResultPanel({
   model,
@@ -119,20 +171,34 @@ export default function ResultPanel({
   usage?: JevUsage;
   questions: { instructions: string }[];
 }) {
+  const list = Object.entries(answers);
+
   return (
-    <section className="space-y-4">
-      <h2 className="text-lg font-semibold">Decisions</h2>
-      {Object.entries(answers).map(([id, answer], i) => (
-        <div key={id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-          <p className="mb-3 text-sm font-medium text-zinc-800">
-            Q{i + 1}. {questions[i]?.instructions ?? id}
-          </p>
-          {answer.type === "noul" && <NoulBar answer={answer} />}
-          {answer.type === "choice" && <ChoiceChart answer={answer} />}
-          {answer.type === "score" && <ScoreScale answer={answer} />}
-        </div>
-      ))}
-      <p className="text-center text-[10px] text-zinc-400">
+    <section>
+      <SectionLabel meta={`${list.length} ${list.length === 1 ? "answer" : "answers"}`}>
+        Readout
+      </SectionLabel>
+
+      <div className="mt-4 flex flex-col">
+        {list.map(([id, answer], i) => (
+          <article key={id} className="border-t border-rule py-6 first:border-t-0 first:pt-0">
+            <div className="mb-4">
+              <p className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+                Query {String(i + 1).padStart(2, "0")} · {answer.type}
+              </p>
+              <p className="mt-1.5 max-w-[52ch] text-[15px] leading-snug text-ink">
+                {questions[i]?.instructions ?? id}
+              </p>
+            </div>
+
+            {answer.type === "noul" && <NoulView answer={answer} i={i} />}
+            {answer.type === "choice" && <ChoiceView answer={answer} i={i} />}
+            {answer.type === "score" && <ScoreView answer={answer} i={i} />}
+          </article>
+        ))}
+      </div>
+
+      <p className="tnum border-t border-rule pt-3 font-mono text-[10px] leading-relaxed text-ink-ghost">
         {model}
         {usage ? ` · ${usage.input_tokens} in / ${usage.output_tokens} out` : ""}
         {usage?.cost != null ? ` · $${usage.cost.toFixed(6)}` : ""}
@@ -140,3 +206,5 @@ export default function ResultPanel({
     </section>
   );
 }
+
+export { EmptyState, LoadingState };

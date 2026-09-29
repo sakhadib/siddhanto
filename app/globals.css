@@ -1,1 +1,167 @@
 @import "tailwindcss";
+
+/* ==========================================================================
+   Siddhanto — "calibration instrument" design tokens
+   Aesthetic: paper-and-ink drafting sheet. Hairline rules instead of cards,
+   monospace tabular numerals for every measurement, one signal-red accent
+   derived from the wordmark (#E60112). Light only, by decision.
+   ========================================================================== */
+
+@theme {
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /* Paper — warm bone. Never #fff. */
+  --color-paper: oklch(0.9765 0.0055 78);
+  --color-paper-raised: oklch(0.9895 0.003 78);
+  --color-paper-sunk: oklch(0.952 0.0065 78);
+
+  /* Ink — warm near-black. Never #000. */
+  --color-ink: oklch(0.185 0.008 60);
+  --color-ink-soft: oklch(0.42 0.01 65);
+  --color-ink-faint: oklch(0.54 0.009 70);
+  --color-ink-ghost: oklch(0.64 0.008 75);
+
+  /* Rules — the only "borders" in the system. */
+  --color-rule: oklch(0.868 0.007 78);
+  --color-rule-strong: oklch(0.775 0.01 72);
+
+  /* Signal — the wordmark's red, deepened for 4.5:1 on paper. */
+  --color-signal: oklch(0.535 0.2 23);
+  --color-signal-bright: oklch(0.60 0.215 25);
+  --color-signal-wash: oklch(0.945 0.03 26);
+
+  --shadow-lift: 0 1px 2px oklch(0.35 0.02 70 / 0.06),
+    0 8px 24px -12px oklch(0.3 0.02 70 / 0.12);
+  --shadow-panel: 0 2px 4px oklch(0.35 0.02 70 / 0.05),
+    0 16px 40px -20px oklch(0.3 0.02 70 / 0.18);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    font-feature-settings: "cv05" 1;
+  }
+
+  /* Atmosphere: a faint drafting grid + paper grain, fixed and inert.
+     Applied to body::before so it never scrolls or repaints with content. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        oklch(0.185 0.008 60 / 0.032) 0 1px,
+        transparent 1px 4px
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+    background-size:
+      100% 4px,
+      140px 140px;
+    opacity: 0.5;
+  }
+
+  /* Every measurement is tabular so digits don't jitter as they update. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  ::selection {
+    background: oklch(0.535 0.2 23 / 0.18);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  /* Never animate width/height. Only transform + opacity. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Staggered entrance. Set --i on each item. */
+  .rise {
+    opacity: 0;
+    animation: rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
+  /* A measure fills from the left via transform, not width.
+     --target is the fraction to settle at (0–1). */
+  .measure {
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: measure 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+
+  .press {
+    transition:
+      transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .press:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  /* Sweeping shimmer for the pending readout. */
+  .sweep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      oklch(0.535 0.2 23 / 0.12) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: sweep 1.6s linear infinite;
+  }
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes measure {
+  to {
+    transform: scaleX(var(--target, 1));
+  }
+}
+
+@keyframes sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
