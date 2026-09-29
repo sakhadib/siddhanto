@@ -48,12 +48,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   className="h-8 w-auto sm:h-9"
                 />
               </a>
-              <p className="font-mono text-[11px] leading-relaxed tracking-wide text-ink-faint uppercase">
+              <p className="font-mono text-meta font-medium leading-relaxed tracking-[0.14em] text-ink-faint uppercase">
                 <span className="text-ink-soft">Engine</span> typesafe/jev-1.13
-                <span className="mx-2 text-rule-strong" aria-hidden>
+                {/* The right-hand clause is texture, and it wrapped to three
+                    ragged lines on narrow screens. Drop it below sm. */}
+                <span className="mx-2 hidden text-rule-strong sm:inline" aria-hidden>
                   /
                 </span>
-                <span className="text-ink-soft">Calibrated</span> no / true / false
+                <span className="hidden text-ink-soft sm:inline">Calibrated</span>{" "}
+                <span className="hidden sm:inline">no / true / false</span>
               </p>
             </div>
             <div className="border-b border-rule" />
@@ -62,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 pb-16">{children}</main>
 
           <footer className="border-t border-rule py-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[11px] tracking-wide text-ink-faint uppercase">
+            <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-meta font-medium tracking-[0.14em] text-ink-faint uppercase">
               <p>Siddhanto — structured decisions, calibrated probabilities.</p>
               <a href="/privacy" className="press text-ink-soft underline decoration-rule-strong underline-offset-4 hover:text-signal hover:decoration-signal">
                 Privacy &amp; data policy

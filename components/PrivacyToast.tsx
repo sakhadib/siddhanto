@@ -32,7 +32,7 @@ export default function PrivacyToast() {
       className="rise fixed inset-x-4 bottom-4 z-50 border border-rule-strong bg-paper-raised p-4 shadow-panel sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-80"
     >
       <div className="flex items-baseline justify-between gap-3 border-b border-rule pb-2">
-        <p className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+        <p className="font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">
           Before you begin
         </p>
         <button
@@ -44,7 +44,7 @@ export default function PrivacyToast() {
           ×
         </button>
       </div>
-      <p className="mt-2.5 text-[12px] leading-relaxed text-ink-soft">
+      <p className="mt-3 text-[13.5px] leading-relaxed text-ink-soft">
         Every submission is recorded, including the ones the model rejects, and you can
         optionally rate a response or leave a note. Read the{" "}
         <a

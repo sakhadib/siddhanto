@@ -31,6 +31,22 @@
   --color-signal-bright: oklch(0.60 0.215 25);
   --color-signal-wash: oklch(0.945 0.03 26);
 
+  /* Type scale. The first pass ran a 9–13px floor for almost everything,
+     which read as illegible. Smallest body content is now --text-note (12.5px);
+     --text-tick is for axis furniture only, never for content. */
+  --text-tick: 10.5px;
+  --text-tick--line-height: 1;
+  --text-meta: 11px;
+  --text-meta--line-height: 1.4;
+  --text-label: 12px;
+  --text-label--line-height: 1.2;
+  --text-note: 12.5px;
+  --text-note--line-height: 1.55;
+  --text-row: 14.5px;
+  --text-row--line-height: 1.45;
+  --text-lead: 16.5px;
+  --text-lead--line-height: 1.5;
+
   --shadow-lift: 0 1px 2px oklch(0.35 0.02 70 / 0.06),
     0 8px 24px -12px oklch(0.3 0.02 70 / 0.12);
   --shadow-panel: 0 2px 4px oklch(0.35 0.02 70 / 0.05),
@@ -126,6 +142,31 @@
   }
   .press:active:not(:disabled) {
     transform: translateY(1px);
+  }
+
+  /* A writable field. The first pass used a bare bottom rule, which was
+     elegant but gave no cue that anything here could be typed into. This is
+     the same sunken-channel language the measurement grooves already use, so
+     inputs read as places you write rather than as more blank paper. */
+  .channel {
+    background-color: var(--color-paper-sunk);
+    border-top: 1px solid var(--color-rule);
+    border-bottom: 1px solid var(--color-rule-strong);
+    transition:
+      background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .channel:hover {
+    background-color: color-mix(in oklab, var(--color-paper-sunk) 70%, var(--color-paper));
+  }
+  .channel:focus {
+    background-color: var(--color-paper-raised);
+    border-color: var(--color-signal);
+    outline: none;
+  }
+  .channel::placeholder {
+    color: var(--color-ink-faint);
+    opacity: 0.75;
   }
 
   /* Sweeping shimmer for the pending readout. */

@@ -96,7 +96,7 @@ function ChoiceChart({ answer }: { answer: Extract<Answer, { type: "choice" }> }
         zeroline: false,
         fixedrange: true,
         automargin: true,
-        tickfont: { size: 10, color: PLOT.inkSoft },
+        tickfont: { size: 11.5, color: PLOT.inkSoft },
       },
     };
     return { data: d, layout: l, height: Math.max(120, entries.length * 34 + 46) };
@@ -146,14 +146,14 @@ function ScoreChart({ answer }: { answer: Extract<Answer, { type: "score" }> }) 
         tickmode: "array",
         tickvals: levels.map(([idx]) => Number(idx)),
         ticktext: levels.map(([idx]) => idx),
-        title: { text: "scale level", font: { size: 9, color: PLOT.inkGhost }, standoff: 6 },
+        title: { text: "scale level", font: { size: 10, color: PLOT.inkFaint }, standoff: 8 },
       },
       yaxis: {
         ...axisCommon(),
         range: [0, 100],
         dtick: 25,
         ticksuffix: "%",
-        title: { text: "probability mass", font: { size: 9, color: PLOT.inkGhost }, standoff: 4 },
+        title: { text: "probability mass", font: { size: 10, color: PLOT.inkFaint }, standoff: 6 },
       },
       // Expected value, drawn across the scale it was computed on.
       shapes: [
@@ -175,7 +175,7 @@ function ScoreChart({ answer }: { answer: Extract<Answer, { type: "score" }> }) 
           yanchor: "bottom",
           text: `E[score] ${answer.score.toFixed(2)}`,
           showarrow: false,
-          font: { size: 10, color: PLOT.signal },
+          font: { size: 11.5, color: PLOT.signal },
           xanchor: answer.score > levels.length * 0.6 ? "right" : "left",
           xshift: answer.score > levels.length * 0.6 ? -4 : 4,
         },

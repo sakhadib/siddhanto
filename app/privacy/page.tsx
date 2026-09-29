@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 function H({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mt-9 mb-3 font-mono text-[11px] tracking-[0.18em] text-ink-soft uppercase">
+    <h2 className="mt-10 mb-3.5 font-mono text-label font-medium tracking-[0.16em] text-ink uppercase">
       {children}
     </h2>
   );
@@ -19,7 +19,7 @@ function Item({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex gap-3 border-b border-rule py-2.5 last:border-b-0">
       <span aria-hidden className="mt-2 h-px w-3 shrink-0 bg-rule-strong" />
-      <span className="text-[14px] leading-relaxed text-ink-soft">{children}</span>
+      <span className="text-[15.5px] leading-relaxed text-ink-soft">{children}</span>
     </li>
   );
 }
@@ -35,7 +35,7 @@ export default function Privacy() {
       </div>
 
       <div className="rise mt-8 border-y-2 border-ink py-4" style={{ "--i": 1 } as React.CSSProperties}>
-        <p className="text-[15px] leading-relaxed text-ink">
+        <p className="text-lead leading-relaxed text-ink">
           Siddhanto has no accounts, no names and no email addresses. Submissions are stored
           anonymously and used to study how people ask decision questions. Rejected submissions
           are kept too — they are part of the same record.
@@ -68,7 +68,7 @@ export default function Privacy() {
 
       <section className="rise" style={{ "--i": 3 } as React.CSSProperties}>
         <H>Ratings and written notes</H>
-        <p className="text-[14px] leading-relaxed text-ink-soft">
+        <p className="text-[15.5px] leading-relaxed text-ink-soft">
           If you choose to rate a response, the following is stored alongside it:
         </p>
         <ul className="mt-3">
@@ -106,7 +106,7 @@ export default function Privacy() {
 
       <section className="rise" style={{ "--i": 5 } as React.CSSProperties}>
         <H>How submissions are processed</H>
-        <p className="text-[14px] leading-relaxed text-ink-soft">
+        <p className="text-[15.5px] leading-relaxed text-ink-soft">
           To produce a decision, your text is sent to{" "}
           <strong className="font-medium text-ink">OpenRouter</strong> and processed by the{" "}
           <strong className="font-medium text-ink">TypeSafe Jev</strong> model. Their own
@@ -117,7 +117,7 @@ export default function Privacy() {
 
       <section className="rise" style={{ "--i": 6 } as React.CSSProperties}>
         <H>Retrieval and deletion</H>
-        <p className="text-[14px] leading-relaxed text-ink-soft">
+        <p className="text-[15.5px] leading-relaxed text-ink-soft">
           Submissions are not tied to any identity, so a specific person&apos;s data cannot be
           looked up or deleted on request — by design there is no way to connect a record back
           to the person who wrote it.

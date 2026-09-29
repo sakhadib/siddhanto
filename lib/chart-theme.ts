@@ -44,7 +44,7 @@ export function axisCommon() {
     ticks: "outside" as const,
     ticklen: 4,
     tickcolor: PLOT.ruleStrong,
-    tickfont: { size: 10, color: PLOT.inkFaint },
+    tickfont: { size: 11, color: PLOT.inkFaint },
     fixedrange: true,
     automargin: true,
   };
@@ -56,11 +56,11 @@ export const BASE_LAYOUT = {
   showlegend: false,
   hovermode: "closest" as const,
   dragmode: false as const,
-  font: { family: "ui-monospace, monospace", size: 11, color: PLOT.inkSoft },
+  font: { family: "ui-monospace, monospace", size: 12, color: PLOT.inkSoft },
   hoverlabel: {
     bgcolor: PLOT.paperRaised,
     bordercolor: PLOT.ruleStrong,
-    font: { family: "ui-monospace, monospace", size: 11, color: PLOT.ink },
+    font: { family: "ui-monospace, monospace", size: 12, color: PLOT.ink },
     align: "left" as const,
   },
 };

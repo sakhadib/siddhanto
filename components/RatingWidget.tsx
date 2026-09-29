@@ -76,7 +76,7 @@ export default function RatingWidget({
 
       {phase === "done" && !commentOpen && score !== null ? (
         <div className="mt-3">
-          <p className="text-[13px] leading-relaxed text-ink-soft">
+          <p className="text-row leading-relaxed text-ink-soft">
             Recorded — {score}/5, {SCALE_WORDS[score]}.{" "}
             <button
               type="button"
@@ -101,7 +101,7 @@ export default function RatingWidget({
         </div>
       ) : (
         <>
-          <p className="mt-3 font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+          <p className="mt-3.5 font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">
             How useful was it?
           </p>
 
@@ -130,7 +130,7 @@ export default function RatingWidget({
             })}
           </div>
 
-          <p className="mt-1.5 text-[11px] text-ink-faint">
+          <p className="mt-2 text-note text-ink-faint">
             {score === null
               ? `1 = ${SCALE_WORDS[1]} · 5 = ${SCALE_WORDS[5]}`
               : `${score} — ${SCALE_WORDS[score]}`}
@@ -140,7 +140,7 @@ export default function RatingWidget({
             <div className="rise mt-4">
               <label
                 htmlFor="rating-comment"
-                className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase"
+                className="font-mono text-label font-medium tracking-[0.16em] text-ink uppercase"
               >
                 What did it miss?
               </label>
@@ -152,14 +152,14 @@ export default function RatingWidget({
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
                 placeholder="e.g. It read the listing correctly but ignored that the price is below market."
-                className="mt-1.5 w-full resize-none border-b border-rule-strong bg-transparent pb-2 text-[14px] leading-relaxed text-ink placeholder:text-ink-faint/60 focus:border-signal focus:outline-none"
+                className="channel mt-2 w-full resize-none px-3 py-2.5 text-base leading-relaxed"
               />
               <div className="mt-3 flex items-center gap-3">
                 <button
                   type="button"
                   onClick={submitComment}
                   disabled={!comment.trim() || phase === "error"}
-                  className="press border-2 border-ink bg-ink px-4 py-2 font-mono text-[11px] tracking-[0.16em] text-paper uppercase disabled:border-rule-strong disabled:bg-transparent disabled:text-ink-ghost"
+                  className="press border-2 border-ink bg-ink px-5 py-2.5 font-mono text-[12.5px] tracking-[0.14em] text-paper uppercase disabled:border-rule-strong disabled:bg-transparent disabled:text-ink-ghost"
                 >
                   {phase === "error" ? "Retry" : "Send note"}
                 </button>
@@ -169,11 +169,11 @@ export default function RatingWidget({
                     setCommentOpen(false);
                     setComment("");
                   }}
-                  className="press font-mono text-[11px] tracking-[0.14em] text-ink-faint uppercase hover:text-ink"
+                  className="press font-mono text-[12.5px] tracking-[0.12em] text-ink-faint uppercase hover:text-ink"
                 >
                   Skip
                 </button>
-                <span className="tnum ml-auto font-mono text-[10px] text-ink-ghost">
+                <span className="tnum ml-auto font-mono text-meta text-ink-faint">
                   {comment.length}/{RATING_LIMITS.commentMax}
                 </span>
               </div>
@@ -184,13 +184,13 @@ export default function RatingWidget({
             <button
               type="button"
               onClick={() => setCommentOpen(true)}
-              className="press mt-3 self-start border-b border-dashed border-rule-strong pb-0.5 font-mono text-[11px] tracking-[0.14em] text-ink-soft uppercase hover:border-signal hover:text-signal"
+              className="press mt-3 self-start border-b border-dashed border-rule-strong pb-1 font-mono text-[12.5px] tracking-[0.12em] text-ink-soft uppercase hover:border-signal hover:text-signal"
             >
               + Add a note
             </button>
           )}
 
-          {error && <p className="mt-3 text-[12px] text-signal">{error}</p>}
+          {error && <p className="mt-3 text-note text-signal">{error}</p>}
         </>
       )}
     </section>

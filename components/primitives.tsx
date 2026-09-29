@@ -34,12 +34,12 @@ export function SectionLabel({
 }) {
   return (
     <div className={`flex items-baseline gap-3 ${className}`}>
-      <span className="shrink-0 font-mono text-[11px] tracking-[0.18em] text-ink-soft uppercase">
+      <span className="shrink-0 font-mono text-label font-medium tracking-[0.16em] text-ink uppercase">
         {children}
       </span>
       <span aria-hidden className="h-px flex-1 bg-rule" />
       {meta !== undefined && (
-        <span className="tnum shrink-0 font-mono text-[11px] text-ink-faint">{meta}</span>
+        <span className="tnum shrink-0 font-mono text-meta text-ink-faint">{meta}</span>
       )}
     </div>
   );
@@ -64,7 +64,7 @@ export function Axis({ labels = true }: { labels?: boolean }) {
           >
             <span className={`block w-px ${major ? "h-1.5 bg-rule-strong" : "h-1 bg-rule"}`} />
             {labels && (
-              <span className="tnum mt-0.5 font-mono text-[9px] leading-none text-ink-ghost">
+              <span className="tnum mt-1 font-mono text-tick leading-none whitespace-nowrap text-ink-faint">
                 {t}
               </span>
             )}
@@ -125,7 +125,7 @@ export function Readout({
 }) {
   return (
     <div className="rise" style={vars({ "--i": i })}>
-      <p className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">{label}</p>
+      <p className="font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">{label}</p>
       <p className="mt-1 flex items-baseline gap-1.5">
         <span className="tnum font-mono text-[clamp(2.5rem,6vw,3.75rem)] leading-[0.9] font-medium tracking-tighter text-ink">
           {value}
@@ -156,21 +156,21 @@ export function Field({
 } & React.InputHTMLAttributes<HTMLInputElement> &
   React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const control =
-    "peer w-full resize-none border-b border-rule-strong bg-transparent pb-2 text-[15px] leading-relaxed text-ink placeholder:text-ink-ghost/70 focus:border-signal focus:outline-none";
+    "channel peer w-full resize-none px-3 py-2.5 text-base leading-relaxed text-ink";
   const shared = { ...rest, className: control };
 
   return (
     <div className={className}>
-      <div className="mb-1.5 flex items-baseline justify-between gap-3">
-        <label className="font-mono text-[10px] tracking-[0.18em] text-ink-soft uppercase">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <label className="font-mono text-label font-medium tracking-[0.16em] text-ink uppercase">
           {label}
         </label>
         {meta !== undefined && (
-          <span className="tnum font-mono text-[10px] text-ink-ghost">{meta}</span>
+          <span className="tnum font-mono text-meta text-ink-faint">{meta}</span>
         )}
       </div>
       {textarea ? <textarea rows={3} {...(shared as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} /> : <input {...(shared as React.InputHTMLAttributes<HTMLInputElement>)} />}
-      {hint && <p className="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{hint}</p>}
+      {hint && <p className="mt-2 max-w-[58ch] text-note text-ink-faint">{hint}</p>}
     </div>
   );
 }
@@ -191,7 +191,7 @@ export function InkButton({
     <button
       {...rest}
       disabled={rest.disabled || pending}
-      className="press group relative w-full overflow-hidden border-2 border-ink bg-ink px-6 py-4 font-mono text-[13px] tracking-[0.2em] text-paper uppercase disabled:cursor-not-allowed disabled:border-rule-strong disabled:bg-transparent disabled:text-ink-ghost"
+      className="press group relative w-full overflow-hidden border-2 border-ink bg-ink px-6 py-4 font-mono text-[15px] tracking-[0.18em] text-paper uppercase disabled:cursor-not-allowed disabled:border-rule-strong disabled:bg-transparent disabled:text-ink-ghost"
     >
       {pending && (
         <span aria-hidden className="sweep absolute inset-0" />
@@ -215,7 +215,7 @@ export function Notice({
   return (
     <div
       role="status"
-      className={`border-l-2 py-1 pl-3 text-[13px] leading-relaxed ${
+      className={`border-l-2 py-1.5 pl-3 text-note ${
         tone === "signal" ? "border-signal text-signal" : "border-rule-strong text-ink-soft"
       }`}
     >

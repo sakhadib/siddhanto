@@ -12,15 +12,15 @@ function Confidence({ value, i }: { value: number; i: number }) {
   return (
     <div className="mt-5 border-t border-rule pt-3">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+        <span className="font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">
           Confidence
         </span>
-        <span className="tnum font-mono text-[13px] text-ink-soft">{pct(value)}</span>
+        <span className="tnum font-mono text-[15px] text-ink-soft">{pct(value)}</span>
       </div>
       <div className="mt-2">
         <MeasureBar value={value} i={i} showAxis={false} />
       </div>
-      <p className="mt-2 max-w-[46ch] text-[11px] leading-relaxed text-ink-faint">
+      <p className="mt-2.5 max-w-[52ch] text-note text-ink-faint">
         Confidence summarises the whole distribution. It is not the probability of the
         winning option.
       </p>
@@ -34,7 +34,7 @@ function NoulView({ answer, i }: { answer: Extract<Answer, { type: "noul" }>; i:
       <Readout label="Probability true" value={pct(answer.noul)} i={i} />
       <div className="mt-4">
         <DecisionChart answer={answer} />
-        <p className="tnum mt-2 font-mono text-[10px] text-ink-ghost">
+        <p className="tnum mt-2.5 font-mono text-meta text-ink-faint">
           noul = {answer.noul.toFixed(4)} · no confidence is returned for noul
         </p>
       </div>
@@ -56,16 +56,16 @@ function ChoiceView({ answer, i }: { answer: Extract<Answer, { type: "choice" }>
           const isWinner = label === answer.choice;
           return (
             <div key={label} className="flex items-baseline gap-3 border-b border-rule py-1.5 last:border-b-0">
-              <dt className={`min-w-0 flex-1 text-[13px] leading-snug ${isWinner ? "font-medium text-ink" : "text-ink-soft"}`}>
+              <dt className={`min-w-0 flex-1 text-row ${isWinner ? "font-medium text-ink" : "text-ink-soft"}`}>
                 {isWinner && (
                   <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 shrink-0 translate-y-[-1px] bg-signal" />
                 )}
                 <span className="break-words">{label}</span>
               </dt>
-              <dd className="tnum shrink-0 font-mono text-[13px] text-ink-soft">
+              <dd className="tnum shrink-0 font-mono text-[15px] text-ink-soft">
                 {pct(p, 1)}
                 {isWinner && (
-                  <span className="ml-1.5 text-[9px] tracking-widest text-signal uppercase">sel</span>
+                  <span className="ml-1.5 text-[10px] tracking-[0.14em] text-signal uppercase">sel</span>
                 )}
               </dd>
             </div>
@@ -97,13 +97,13 @@ function ScoreView({ answer, i }: { answer: Extract<Answer, { type: "score" }>; 
                 key={idx}
                 className="flex items-baseline gap-3 border-b border-rule py-1.5 last:border-b-0"
               >
-                <span className="tnum w-4 shrink-0 text-right font-mono text-[10px] text-ink-ghost">
+                <span className="tnum w-4 shrink-0 text-right font-mono text-[12px] text-ink-faint">
                   {idx}
                 </span>
-                <span className={`min-w-0 flex-1 text-[13px] leading-snug ${isPeak ? "text-ink" : "text-ink-soft"}`}>
+                <span className={`min-w-0 flex-1 text-row ${isPeak ? "font-medium text-ink" : "text-ink-soft"}`}>
                   {desc}
                 </span>
-                <span className="tnum shrink-0 font-mono text-[13px] text-ink">{pct(p)}</span>
+                <span className="tnum shrink-0 font-mono text-[15px] text-ink">{pct(p)}</span>
               </li>
             );
           })}
@@ -119,10 +119,10 @@ function ScoreView({ answer, i }: { answer: Extract<Answer, { type: "score" }>; 
 function EmptyState() {
   return (
     <div className="rise flex flex-col justify-center py-10">
-      <p className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+      <p className="font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">
         Awaiting input
       </p>
-      <p className="mt-3 max-w-[38ch] text-[15px] leading-relaxed text-ink-soft">
+      <p className="mt-3 max-w-[40ch] text-lead leading-relaxed text-ink-soft">
         Describe a situation on the left and add at least one query. The model answers with
         a probability, a distribution, or an expected value — each read against the same
         0–100 scale.
@@ -138,7 +138,7 @@ function EmptyState() {
 function LoadingState() {
   return (
     <div className="flex flex-col justify-center py-10" role="status" aria-live="polite">
-      <p className="font-mono text-[10px] tracking-[0.18em] text-signal uppercase">Reading…</p>
+      <p className="font-mono text-label font-medium tracking-[0.16em] text-signal uppercase">Reading…</p>
       <div className="relative mt-4 h-10 w-32 overflow-hidden border-y border-rule bg-paper-sunk sweep" aria-hidden>
         <span className="absolute inset-x-0 bottom-0 h-px bg-rule-strong" />
       </div>
@@ -150,7 +150,7 @@ function LoadingState() {
           </div>
         ))}
       </div>
-      <p className="mt-5 font-mono text-[11px] text-ink-faint">
+      <p className="mt-5 max-w-[44ch] text-note text-ink-faint">
         The model is weighing the state against each query.
       </p>
     </div>
@@ -182,10 +182,10 @@ export default function ResultPanel({
         {list.map(([id, answer], i) => (
           <article key={id} className="border-t border-rule py-6 first:border-t-0 first:pt-0">
             <div className="mb-4">
-              <p className="font-mono text-[10px] tracking-[0.18em] text-ink-faint uppercase">
+              <p className="font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">
                 Query {String(i + 1).padStart(2, "0")} · {answer.type}
               </p>
-              <p className="mt-1.5 max-w-[52ch] text-[15px] leading-snug text-ink">
+              <p className="mt-2 max-w-[52ch] text-lead leading-snug font-medium text-ink">
                 {questions[i]?.instructions ?? id}
               </p>
             </div>
@@ -197,7 +197,7 @@ export default function ResultPanel({
         ))}
       </div>
 
-      <p className="tnum border-t border-rule pt-3 font-mono text-[10px] leading-relaxed text-ink-ghost">
+      <p className="tnum border-t border-rule pt-3.5 font-mono text-meta leading-relaxed text-ink-faint">
         {model}
         {usage ? ` · ${usage.input_tokens} in / ${usage.output_tokens} out` : ""}
         {usage?.cost != null ? ` · $${usage.cost.toFixed(6)}` : ""}

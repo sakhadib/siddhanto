@@ -77,15 +77,15 @@ export default function Home() {
       {/* Intro — asymmetric, left-aligned, no centred hero. */}
       <section className="rise grid items-end gap-6 pt-10 pb-12 lg:grid-cols-[1.45fr_1fr] lg:gap-12">
         <div>
-          <p className="font-mono text-[10px] tracking-[0.22em] text-signal uppercase">
+          <p className="font-mono text-[12px] font-medium tracking-[0.18em] text-signal uppercase">
             Not advice — calibration
           </p>
-          <h1 className="mt-3 max-w-[19ch] text-[clamp(2.1rem,5.2vw,3.4rem)] leading-[1.02] font-semibold tracking-tighter text-ink">
+          <h1 className="mt-4 max-w-[20ch] text-[clamp(2.2rem,5.4vw,3.6rem)] leading-[1.03] font-semibold tracking-tighter text-ink">
             Ask a precise question about a messy situation. Get a probability, not an opinion.
           </h1>
         </div>
         <div className="lg:pb-2">
-          <p className="max-w-[46ch] text-[14px] leading-relaxed text-ink-soft">
+          <p className="max-w-[48ch] text-[15.5px] leading-relaxed text-ink-soft">
             State what is going on, then pose up to ten queries — a statement to judge, a scale
             to score, or a closed set of options. The model returns calibrated numbers, and the
             confidence figure describes the distribution rather than the winner.
@@ -96,6 +96,8 @@ export default function Home() {
       <div className="grid gap-12 border-t-2 border-ink pt-8 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
         {/* ------------------------------------------------ input rail */}
         <div className="flex flex-col gap-10">
+          <SectionLabel>Input</SectionLabel>
+
           <section className="rise" style={{ "--i": 1 } as React.CSSProperties}>
             <SectionLabel meta={`${state.length}/${LIMITS.stateMax}`}>The situation</SectionLabel>
             <div className="mt-4">
@@ -134,7 +136,7 @@ export default function Home() {
               type="button"
               disabled={questions.length >= LIMITS.questionsMax}
               onClick={() => setQuestions((qs) => [...qs, emptyQuestion("noul")])}
-              className="press mt-6 self-start border-b border-dashed border-rule-strong pb-0.5 font-mono text-[11px] tracking-[0.14em] text-ink-soft uppercase hover:border-signal hover:text-signal disabled:pointer-events-none disabled:opacity-40"
+              className="press mt-6 self-start border-b border-dashed border-rule-strong pb-1 font-mono text-[12.5px] tracking-[0.12em] text-ink-soft uppercase hover:border-signal hover:text-signal disabled:pointer-events-none disabled:opacity-40"
             >
               + Add query
             </button>
@@ -160,7 +162,7 @@ export default function Home() {
             >
               {loading ? "Reading…" : "Decide"}
             </InkButton>
-            <p className="font-mono text-[10px] leading-relaxed text-ink-ghost">
+            <p className="max-w-[52ch] text-note text-ink-faint">
               {state.trim()
                 ? "Each submission is recorded — see the privacy policy."
                 : "Describe the situation above to enable the read."}
@@ -170,7 +172,7 @@ export default function Home() {
           {error && (
             <div className="rise">
               <Notice>
-                <span className="font-mono text-[10px] tracking-[0.18em] uppercase">Rejected</span>
+                <span className="font-mono text-label font-medium tracking-[0.16em] uppercase">Rejected</span>
                 <p className="mt-1">{error}</p>
               </Notice>
             </div>

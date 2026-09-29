@@ -61,7 +61,7 @@ export default function PlotChart({
   useEffect(() => {
     const el = host.current;
     if (!plotly || !el) return;
-    const font = { family: monoStack(), size: 11, color: PLOT.inkSoft };
+    const font = { family: monoStack(), size: 12, color: PLOT.inkSoft };
     plotly.react(el, data, { ...layout, font }, CONFIG);
     return () => {
       plotly.purge(el);

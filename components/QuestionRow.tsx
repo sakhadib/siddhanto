@@ -26,7 +26,7 @@ export function emptyQuestion(type: DraftQuestion["type"]): DraftQuestion {
 /** A monospace index gutter cell — the leftmost column of every ledger row. */
 function Gutter({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`w-7 shrink-0 pr-2 text-right font-mono text-[10px] leading-5 text-ink-ghost tnum ${className}`}>
+    <div className={`w-8 shrink-0 pr-2.5 text-right font-mono text-meta leading-6 text-ink-faint tnum ${className}`}>
       {children}
     </div>
   );
@@ -59,7 +59,7 @@ export default function QuestionRow({
             type="button"
             onClick={onRemove}
             disabled={total <= 1}
-            className="press ml-2 text-ink-ghost hover:text-signal disabled:pointer-events-none disabled:opacity-30"
+            className="press ml-2.5 text-[12.5px] tracking-[0.12em] text-ink-faint uppercase hover:text-signal disabled:pointer-events-none disabled:opacity-30"
           >
             Remove
           </button>
@@ -68,10 +68,10 @@ export default function QuestionRow({
         Query {String(index + 1).padStart(2, "0")}
       </SectionLabel>
 
-      <div className="mt-3 flex gap-3">
+      <div className="mt-3 flex gap-3.5">
         <div
           aria-hidden
-          className="w-7 shrink-0 translate-y-1 border-r border-rule pr-2 text-right font-mono text-[13px] leading-5 text-ink-faint tnum"
+          className="w-8 shrink-0 translate-y-1.5 border-r border-rule pr-2.5 text-right font-mono text-[15px] leading-6 text-ink-soft tnum"
         >
           q{index}
         </div>
@@ -93,7 +93,7 @@ export default function QuestionRow({
                       instructions: question.instructions,
                     } as DraftQuestion)
                   }
-                  className={`press -mb-px border-b-2 pb-1.5 font-mono text-[11px] tracking-[0.16em] uppercase ${
+                  className={`press -mb-px border-b-2 pb-2 font-mono text-[12.5px] tracking-[0.14em] uppercase ${
                     active
                       ? "border-signal text-ink"
                       : "border-transparent text-ink-ghost hover:text-ink-soft"
@@ -105,7 +105,7 @@ export default function QuestionRow({
             })}
           </div>
 
-          <p className="mt-2 text-[11px] leading-relaxed text-ink-faint">{TYPE_BLURB[type]}</p>
+          <p className="mt-2.5 max-w-[54ch] text-note text-ink-faint">{TYPE_BLURB[type]}</p>
 
           <div className="mt-3">
             <Field
@@ -129,7 +129,7 @@ export default function QuestionRow({
           {type === "noul" && (
             <div className="mt-4 flex flex-col gap-2.5">
               {(["true", "false"] as const).map((side) => (
-                <div key={side} className="flex items-center gap-3">
+                <div key={side} className="flex items-center gap-3.5">
                   <Gutter>{side === "true" ? "T" : "F"}</Gutter>
                   <input
                     aria-label={`What true means`}
@@ -141,7 +141,7 @@ export default function QuestionRow({
                       })
                     }
                     placeholder={side === "true" ? "true means…" : "false means…"}
-                    className="w-full border-b border-rule bg-transparent pb-1.5 text-[13px] text-ink placeholder:text-ink-ghost/70 focus:border-signal focus:outline-none"
+                    className="channel w-full px-3 py-2 text-base"
                   />
                 </div>
               ))}
@@ -157,7 +157,7 @@ export default function QuestionRow({
               </SectionLabel>
               <div className="mt-2.5 flex flex-col gap-2.5">
                 {question.criteria.map((opt, j) => (
-                  <div key={j} className="flex items-center gap-3">
+                  <div key={j} className="flex items-center gap-3.5">
                     <Gutter>{String(j + 1).padStart(2, "0")}</Gutter>
                     <div className="min-w-0 flex-1">
                       <input
@@ -172,7 +172,7 @@ export default function QuestionRow({
                           })
                         }
                         placeholder="Option label"
-                        className="w-full border-b border-rule-strong bg-transparent pb-1 text-[13px] text-ink placeholder:text-ink-ghost/70 focus:border-signal focus:outline-none"
+                        className="channel w-full px-3 py-2 text-base"
                       />
                       <input
                         aria-label={`Option ${j + 1} description`}
@@ -186,7 +186,7 @@ export default function QuestionRow({
                           })
                         }
                         placeholder="Description, optional"
-                        className="mt-1.5 w-full border-b border-rule bg-transparent pb-1 text-[11px] text-ink-soft placeholder:text-ink-ghost/70 focus:border-signal focus:outline-none"
+                        className="channel mt-2 w-full px-3 py-1.5 text-note text-ink-soft"
                       />
                     </div>
                     {question.criteria.length > LIMITS.choiceOptionsMin && (
@@ -199,7 +199,7 @@ export default function QuestionRow({
                           })
                         }
                         aria-label={`Remove option ${j + 1}`}
-                        className="press shrink-0 px-1 font-mono text-sm text-ink-ghost hover:text-signal"
+                        className="press shrink-0 px-1 font-mono text-lg text-ink-faint hover:text-signal"
                       >
                         ×
                       </button>
@@ -213,7 +213,7 @@ export default function QuestionRow({
                 onClick={() =>
                   onChange({ ...question, criteria: [...question.criteria, { label: "" }] })
                 }
-                className="press mt-3 border-b border-dashed border-rule-strong pb-0.5 font-mono text-[11px] tracking-[0.14em] text-ink-soft uppercase hover:border-signal hover:text-signal disabled:pointer-events-none disabled:opacity-40"
+                className="press mt-3 border-b border-dashed border-rule-strong pb-0.5 font-mono text-[12.5px] tracking-[0.12em] text-ink-soft uppercase hover:border-signal hover:text-signal disabled:pointer-events-none disabled:opacity-40"
               >
                 + Add option
               </button>
@@ -229,7 +229,7 @@ export default function QuestionRow({
               </SectionLabel>
               <div className="mt-2.5 flex flex-col gap-2.5">
                 {question.criteria.map((level, j) => (
-                  <div key={j} className="flex items-center gap-3">
+                  <div key={j} className="flex items-center gap-3.5">
                     <Gutter>{j}</Gutter>
                     <input
                       aria-label={`Level ${j} description`}
@@ -243,7 +243,7 @@ export default function QuestionRow({
                         })
                       }
                       placeholder={`Level ${j} — e.g. ${["unusable", "worn", "serviceable", "near new"][j] ?? "description"}`}
-                      className="w-full border-b border-rule-strong bg-transparent pb-1 text-[13px] text-ink placeholder:text-ink-ghost/70 focus:border-signal focus:outline-none"
+                      className="channel w-full px-3 py-2 text-base"
                     />
                     {question.criteria.length > LIMITS.scoreLevelsMin && (
                       <button
@@ -255,7 +255,7 @@ export default function QuestionRow({
                           })
                         }
                         aria-label={`Remove level ${j}`}
-                        className="press shrink-0 px-1 font-mono text-sm text-ink-ghost hover:text-signal"
+                        className="press shrink-0 px-1 font-mono text-lg text-ink-faint hover:text-signal"
                       >
                         ×
                       </button>
@@ -267,7 +267,7 @@ export default function QuestionRow({
                 type="button"
                 disabled={question.criteria.length >= LIMITS.scoreLevelsMax}
                 onClick={() => onChange({ ...question, criteria: [...question.criteria, ""] })}
-                className="press mt-3 border-b border-dashed border-rule-strong pb-0.5 font-mono text-[11px] tracking-[0.14em] text-ink-soft uppercase hover:border-signal hover:text-signal disabled:pointer-events-none disabled:opacity-40"
+                className="press mt-3 border-b border-dashed border-rule-strong pb-0.5 font-mono text-[12.5px] tracking-[0.12em] text-ink-soft uppercase hover:border-signal hover:text-signal disabled:pointer-events-none disabled:opacity-40"
               >
                 + Add level
               </button>
