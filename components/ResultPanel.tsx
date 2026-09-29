@@ -1,6 +1,7 @@
 import type { Answer, JevUsage } from "@/lib/jev";
 import DecisionChart from "@/components/DecisionChart";
 import { Axis, MeasureBar, Readout, SectionLabel, pct } from "@/components/primitives";
+import { StageList, type Stage } from "@/lib/phase";
 
 /* ==========================================================================
    Readout surface. Each answer pairs a Plotly chart with the exact figures in
@@ -42,8 +43,22 @@ function NoulView({ answer, i }: { answer: Extract<Answer, { type: "noul" }>; i:
   );
 }
 
-function ChoiceView({ answer, i }: { answer: Extract<Answer, { type: "choice" }>; i: number }) {
-  const entries = Object.entries(answer.probabilities).sort((a, b) => b[1] - a[1]);
+function ChoiceView({
+  answer,
+  i,
+  labelMap,
+}: {
+  answer: Extract<Answer, { type: "choice" }>;
+  i: number;
+  labelMap: Record<string, string>;
+}) {
+  // JEV keyed its answer on the English labels it was given. A Bangla reader
+  // only knows the words they typed, so the keys are mapped back for display.
+  // The stored record keeps the English keys untouched.
+  const name = (k: string) => labelMap[k] ?? k;
+  const raw = Object.entries(answer.probabilities).sort((a, b) => b[1] - a[1]);
+  const entries = raw.map(([k, p]) => [name(k), p] as [string, number]);
+  const winner = name(answer.choice);
   return (
     <>
       <SectionLabel meta={`${entries.length} options`}>Distribution</SectionLabel>
@@ -53,7 +68,7 @@ function ChoiceView({ answer, i }: { answer: Extract<Answer, { type: "choice" }>
       {/* Text twin of the chart: precise, selectable, and the accessible path. */}
       <dl className="mt-3 flex flex-col">
         {entries.map(([label, p]) => {
-          const isWinner = label === answer.choice;
+          const isWinner = label === winner;
           return (
             <div key={label} className="flex items-baseline gap-3 py-2">
               <dt className={`min-w-0 flex-1 text-row ${isWinner ? "font-medium text-ink" : "text-ink-soft"}`}>
@@ -123,9 +138,9 @@ function EmptyState() {
         Awaiting input
       </p>
       <p className="mt-3 max-w-[40ch] text-lead leading-relaxed text-ink-soft">
-        Describe a situation on the left and add at least one query. The model answers with
-        a probability, a distribution, or an expected value — each read against the same
-        0–100 scale.
+        Fill the form on the left, or describe the situation above and let it be built for
+        you. Either way the model answers with a probability, a distribution, or an
+        expected value — each read against the same 0–100 scale.
       </p>
       <div className="mt-6 opacity-40" aria-hidden>
         <MeasureBar value={0.0} showAxis={false} />
@@ -135,10 +150,10 @@ function EmptyState() {
   );
 }
 
-function LoadingState() {
+function LoadingState({ stage }: { stage: Stage }) {
   return (
     <div className="flex flex-col justify-center py-10" role="status" aria-live="polite">
-      <p className="font-mono text-label font-medium tracking-[0.16em] text-signal uppercase">Reading…</p>
+      <p className="font-mono text-label font-medium tracking-[0.16em] text-signal uppercase">Deciding…</p>
       <div className="relative mt-4 h-10 w-32 overflow-hidden border-y border-rule bg-paper-sunk sweep" aria-hidden>
         <span className="absolute inset-x-0 bottom-0 h-px bg-rule-strong" />
       </div>
@@ -150,9 +165,9 @@ function LoadingState() {
           </div>
         ))}
       </div>
-      <p className="mt-5 max-w-[44ch] text-note text-ink-faint">
-        The model is weighing the state against each query.
-      </p>
+      <div className="mt-6">
+        <StageList stage={stage} />
+      </div>
     </div>
   );
 }
@@ -164,11 +179,13 @@ export default function ResultPanel({
   answers,
   usage,
   questions,
+  labelMap = {},
 }: {
   model: string;
   answers: Record<string, Answer>;
   usage?: JevUsage;
   questions: { instructions: string }[];
+  labelMap?: Record<string, string>;
 }) {
   const list = Object.entries(answers);
 
@@ -191,7 +208,9 @@ export default function ResultPanel({
             </div>
 
             {answer.type === "noul" && <NoulView answer={answer} i={i} />}
-            {answer.type === "choice" && <ChoiceView answer={answer} i={i} />}
+            {answer.type === "choice" && (
+              <ChoiceView answer={answer} i={i} labelMap={labelMap} />
+            )}
             {answer.type === "score" && <ScoreView answer={answer} i={i} />}
           </article>
         ))}

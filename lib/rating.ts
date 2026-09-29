@@ -33,6 +33,13 @@ export type RatingRequest = z.infer<typeof ratingRequestSchema>;
 export interface ReceiptPayload {
   /** Firestore document id of the decision being rated. */
   id: string;
+  /** The language the author wrote in, and therefore the language the Reading
+   *  is delivered in. Derived server-side, never from the browser. */
+  sourceLang: "en" | "bn";
+  /** sha256 over the English state and questions the Reading prompt is built
+   *  from. /api/advise checks it so the stored narrative provably describes
+   *  the text the author actually wrote. */
+  promptHash: string;
   /** sha256 of the serialised JEV answers this receipt was minted for.
    *  /api/advise requires the submitted answers to hash to this, so the
    *  narrative stored against a decision provably describes that decision's

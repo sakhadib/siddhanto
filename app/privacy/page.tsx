@@ -105,6 +105,10 @@ export default function Privacy() {
           <Item>No raw IP addresses — only the hash described above.</Item>
           <Item>No tracking pixels, advertising networks or cross-site trackers.</Item>
           <Item>No reading of submissions after the fact to build a profile of you.</Item>
+          <Item>
+            No record of what you typed into the composer, unless you go on to submit the form
+            it drafted.
+          </Item>
         </ul>
       </section>
 
@@ -116,6 +120,21 @@ export default function Privacy() {
           <strong className="font-medium text-ink">TypeSafe Jev</strong> model. Their own
           privacy policies govern that processing. As with any online tool, please do not paste
           sensitive personal details into the form.
+        </p>
+        <p className="mt-4 text-[15.5px] leading-relaxed text-ink-soft">
+          If you describe your situation in words instead of filling the form, the same second
+          model reads that description first and drafts a form from it. It receives only what
+          you typed in the composer, and it is instructed to produce questions rather than
+          answers. What you type there is <em>not</em> stored: a draft is scratch work, and
+          nothing is recorded until you press Decide and submit the form it produced.
+        </p>
+        <p className="mt-4 text-[15.5px] leading-relaxed text-ink-soft">
+          If you write in Bangla, that same second model translates your submission into
+          English before the decision model reads it, and translates the resulting <em>Reading
+          </em> back into Bangla. Both the English the model read and your original Bangla are
+          stored together, so a non-English submission is kept as a usable bilingual pair. The
+          translation does not change what is decided: the decision model only ever sees the
+          English version.
         </p>
         <p className="mt-4 text-[15.5px] leading-relaxed text-ink-soft">
           The written <em>Reading</em> shown beneath the results is produced by a{" "}

@@ -8,6 +8,9 @@ import QuestionRow, { emptyQuestion, type DraftQuestion } from "@/components/Que
 import RatingWidget from "@/components/RatingWidget";
 import AdviceSection from "@/components/AdviceSection";
 import { Field, InkButton, Notice, SectionLabel } from "@/components/primitives";
+import Drafter, { type DraftPayload } from "@/components/Drafter";
+import { DECIDE_STAGES, StageList, useStages } from "@/lib/phase";
+import { detectFromParts, type Lang } from "@/lib/lang";
 
 interface ApiResult {
   model: string;
@@ -16,6 +19,20 @@ interface ApiResult {
   /** Opaque signed receipt from the server; present only when the decision was
    *  recorded and RATING_SECRET is configured. */
   receipt?: string;
+  /** Present when the author wrote Bangla: the English text JEV actually read. */
+  lang?: Lang;
+  stateEn?: string;
+  questionsEn?: Question[];
+}
+
+/** Four uppercase hex characters. A label, not an identifier — nothing is
+ *  recorded under it; it only marks the current sitting for the author. */
+function newSessionId(): string {
+  const b = new Uint8Array(2);
+  crypto.getRandomValues(b);
+  return Array.from(b, (x) => x.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
 }
 
 export default function Home() {
@@ -29,6 +46,39 @@ export default function Home() {
   const resultsRef = useRef<HTMLDivElement>(null);
   // When the readout last rendered, so the widget can report time-to-rate.
   const decidedAt = useRef(Date.now());
+  // The English projection the server sent back, when the author wrote Bangla.
+  // The Reading is generated from this, not from the Bangla the user typed.
+  const [english, setEnglish] = useState<{ state: string; questions: Question[] } | null>(null);
+
+  // A client-side handle for "start over". It remounts the input rail, which
+  // is what actually clears the drafting transcript — the component owns that
+  // state and nothing outside it can reach in.
+  const [session, setSession] = useState(() => newSessionId());
+  const decideStage = useStages(DECIDE_STAGES, loading);
+
+  /** A drafted form is a proposal. It lands in the same state a hand-typed one
+   *  would, which is the point: the author reviews it exactly the same way. */
+  function applyDraft(d: DraftPayload) {
+    setState(d.state);
+    setQuestions(d.questions as DraftQuestion[]);
+    setResult(null);
+    setError(null);
+    setEnglish(null);
+    decidedAt.current = Date.now();
+  }
+
+  /** Clear every field and open a new session. The drafter's transcript is
+   *  cleared by the remount, which is why this bumps the key on the rail. */
+  function refresh() {
+    setState("");
+    setQuestions([emptyQuestion("noul")]);
+    setResult(null);
+    setError(null);
+    setEnglish(null);
+    setSession(newSessionId());
+    decidedAt.current = Date.now();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   function updateQuestion(i: number, q: DraftQuestion) {
     setQuestions((qs) => qs.map((old, j) => (j === i ? q : old)));
@@ -60,6 +110,11 @@ export default function Home() {
       }
       setResult(data);
       decidedAt.current = Date.now();
+      if (data.lang === "bn" && data.stateEn && data.questionsEn) {
+        setEnglish({ state: data.stateEn, questions: data.questionsEn });
+      } else {
+        setEnglish(null);
+      }
       // On mobile the readout is below the fold — take them to it.
       if (window.innerWidth < 1024) {
         setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
@@ -72,6 +127,36 @@ export default function Home() {
   }
 
   const canSubmit = state.trim().length > 0 && !loading;
+
+  /** Live detection, for the indicator under the state field. The server
+   *  re-detects and is authoritative; this is only to tell the writer what
+   *  will happen. */
+  const writtenLang: Lang = detectFromParts([
+    state,
+    ...questions.map((q) =>
+      q.type === "choice"
+        ? [q.instructions, ...q.criteria.map((c) => c.label)].join(" ")
+        : q.type === "score"
+          ? [q.instructions, ...q.criteria].join(" ")
+          : [q.instructions, q.criteria.true ?? "", q.criteria.false ?? ""].join(" "),
+    ),
+  ]);
+
+  /** Map the English option labels JEV keyed its answer on back to the labels
+   *  the reader typed. Translation preserves option order, so this is a
+   *  positional mapping rather than a guess. */
+  const labelMap: Record<string, string> = {};
+  if (english) {
+    english.questions.forEach((q, i) => {
+      if (q.type !== "choice") return;
+      const orig = questions[i];
+      if (orig?.type !== "choice") return;
+      q.criteria.forEach((c, j) => {
+        const o = orig.criteria[j];
+        if (o?.label) labelMap[c.label] = o.label;
+      });
+    });
+  }
 
   return (
     <>
@@ -88,16 +173,17 @@ export default function Home() {
         <div className="lg:pb-2">
           <p className="max-w-[48ch] text-[15.5px] leading-relaxed text-ink-soft">
             State what is going on, then pose up to ten queries — a statement to judge, a scale
-            to score, or a closed set of options. The model returns calibrated numbers, and the
-            confidence figure describes the distribution rather than the winner.
+            to score, or a closed set of options. Or describe the situation in ordinary words on
+            the right and have the form built for you. The model returns calibrated numbers, and
+            the confidence figure describes the distribution rather than the winner.
           </p>
         </div>
       </section>
 
       <div className="grid gap-12 border-t-2 border-ink pt-8 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
         {/* ------------------------------------------------ input rail */}
-        <div className="flex flex-col gap-12">
-          <SectionLabel>Input</SectionLabel>
+        <div key={session} className="flex flex-col gap-12">
+          <SectionLabel meta={session}>Input</SectionLabel>
 
           <section className="rise" style={{ "--i": 1 } as React.CSSProperties}>
             <SectionLabel meta={`${state.length}/${LIMITS.stateMax}`}>The situation</SectionLabel>
@@ -111,6 +197,17 @@ export default function Home() {
                 placeholder="A marketplace listing for a used Peloton bike, $500, the seller says “like new” and wants payment by bank transfer…"
                 hint="Everything the model has to reason from. Be specific — vagueness here becomes vagueness in the numbers."
               />
+              {writtenLang === "bn" && (
+                <p className="mt-3 flex items-baseline gap-2 border-l-2 border-signal pl-3 text-note text-ink-soft">
+                  <span className="font-mono text-[11px] tracking-[0.16em] text-signal uppercase">
+                    বাংলা
+                  </span>
+                  <span>
+                    Detected. Your question is translated into English for the model, and
+                    the reading comes back in Bangla.
+                  </span>
+                </p>
+              )}
             </div>
           </section>
 
@@ -159,14 +256,41 @@ export default function Home() {
               onClick={decide}
               disabled={!canSubmit}
               pending={loading}
-              pendingLabel="Reading…"
+              pendingLabel={decideStage.current}
             >
-              {loading ? "Reading…" : "Decide"}
+              Decide
             </InkButton>
             <p className="max-w-[52ch] text-note text-ink-faint">
               {state.trim()
                 ? "Each submission is recorded — see the privacy policy."
                 : "Describe the situation above to enable the read."}
+            </p>
+            {writtenLang === "bn" && !loading && (
+              <p className="max-w-[52ch] text-note text-ink-faint">
+                Bangla is supported, but it costs one extra pass: the question is translated
+                into English before the model sees it, so the numbers take a little longer.
+              </p>
+            )}
+
+            {loading && (
+              <div className="mt-1">
+                <StageList stage={decideStage} />
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={refresh}
+              disabled={loading}
+              className="press w-full border-2 border-rule-strong px-6 py-4 font-mono text-[15px] tracking-[0.18em] text-ink-soft uppercase transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              New question
+            </button>
+            <p className="max-w-[52ch] text-note text-ink-faint">
+              Clears the form and starts a new session. Nothing recorded so far is
+              affected.
             </p>
           </div>
 
@@ -189,6 +313,7 @@ export default function Home() {
                 answers={result.answers}
                 usage={result.usage}
                 questions={questions}
+                labelMap={labelMap}
               />
               {result.receipt && (
                 <div className="mt-8">
@@ -201,9 +326,22 @@ export default function Home() {
               )}
             </>
           ) : loading ? (
-            <LoadingState />
+            <LoadingState stage={decideStage} />
           ) : (
-            <EmptyState />
+            <>
+              <Drafter
+                current={{
+                  state,
+                  questions: questions.filter(
+                    (q) => q.instructions.trim() || !q.criteria
+                  ) as Question[],
+                }}
+                onDraft={applyDraft}
+              />
+              <div className="mt-10">
+                <EmptyState />
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -215,9 +353,10 @@ export default function Home() {
         <AdviceSection
           key={result.receipt}
           receipt={result.receipt}
-          state={state}
-          questions={questions as Question[]}
+          state={english?.state ?? state}
+          questions={(english?.questions ?? (questions as Question[]))}
           answers={result.answers}
+          lang={result.lang ?? "en"}
         />
       )}
     </>

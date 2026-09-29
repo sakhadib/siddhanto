@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Image from "next/image";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Hind_Siliguri, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import PrivacyToast from "@/components/PrivacyToast";
 
@@ -18,10 +18,21 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+// IBM Plex has no Bengali coverage, so Bangla would fall back to whatever the
+// OS happens to have and the page would lose its type. Hind Siliguri is
+// loaded as a second family in the same stack: Latin still renders in Plex,
+// Bengali in Siliguri, decided per glyph.
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["bengali"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-bangla",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Siddhanto — calibrated decisions",
+  title: "Siddhanto — write in English or বাংলা",
   description:
-    "Describe a situation, ask typed questions, and read calibrated probabilities back from the JEV decision model.",
+    "Describe a situation in English or Bangla, ask typed questions, and read calibrated probabilities back from the JEV decision model. বাংলায় লিখুন, ইংরেজি উত্তর পড়ুন।",
 };
 
 export const viewport: Viewport = {
@@ -32,7 +43,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plexSans.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${plexSans.variable} ${plexMono.variable} ${hindSiliguri.variable}`}>
       <body className="min-h-[100dvh] antialiased">
         <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[1400px] flex-col px-5 sm:px-8">
           {/* Masthead — a drafting title block: rules above and below, no box. */}

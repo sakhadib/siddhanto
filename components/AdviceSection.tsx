@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import type { Answer } from "@/lib/jev";
 import type { Question } from "@/lib/validate";
 import { splitAdviseStream } from "@/lib/advise-protocol";
+import { READING_STAGES, StageList, useStages } from "@/lib/phase";
 
 type Phase = "streaming" | "done" | "error";
 
@@ -53,15 +54,28 @@ export default function AdviceSection({
   state,
   questions,
   answers,
+  lang = "en",
 }: {
   receipt: string;
+  /** Always the English the model read, never the reader's own words. */
   state: string;
   questions: Question[];
   answers: Record<string, Answer>;
+  lang?: "en" | "bn";
 }) {
   const [text, setText] = useState("");
   const [phase, setPhase] = useState<Phase>("streaming");
   const [error, setError] = useState<string | null>(null);
+  // A Bangla reader waits twice: once for the model to write the Reading,
+  // once for it to be translated back. The server marks the handover, so the
+  // second wait is described rather than looking like a stalled stream.
+  const [status, setStatus] = useState<string | null>(null);
+  const writing = useStages(READING_STAGES, phase === "streaming" && !status);
+  const translating = useStages(
+    READING_STAGES.map((s) => `${s}, into bangla`),
+    phase === "streaming" && status !== null
+  );
+  const stage = status ? translating : writing;
   const abortRef = useRef<AbortController | null>(null);
   // A stream that never produces a token would otherwise sit on
   // "composing…" forever with no explanation.
@@ -112,8 +126,9 @@ export default function AdviceSection({
           buffer += decoder.decode(value, { stream: true });
           // Strip any sentinel as it arrives so a mid-stream failure never
           // flashes raw control characters into the prose.
-          const { text: clean, error: err } = splitAdviseStream(buffer);
+          const { text: clean, error: err, status: st } = splitAdviseStream(buffer);
           setText(clean);
+          if (st) setStatus(st);
           if (err) {
             setError(err);
             setPhase("error");
@@ -166,15 +181,24 @@ export default function AdviceSection({
           Reading
         </p>
         <p className="font-mono text-meta text-ink-faint">
-          {phase === "streaming" ? "composing…" : phase === "error" ? "unavailable" : "from the numbers above"}
+          {phase === "streaming"
+            ? stage.current
+            : phase === "error"
+              ? "unavailable"
+              : "from the numbers above"}
         </p>
       </div>
 
       {phase === "streaming" && !text && (
-        <div className="mt-5 flex flex-col gap-2.5" aria-hidden>
-          <div className="sweep relative h-4 w-full max-w-[52ch] overflow-hidden bg-paper-sunk" />
-          <div className="sweep relative h-4 w-3/5 overflow-hidden bg-paper-sunk" style={{ animationDelay: "120ms" }} />
-        </div>
+        <>
+          <div className="mt-5 flex flex-col gap-2.5" aria-hidden>
+            <div className="sweep relative h-4 w-full max-w-[52ch] overflow-hidden bg-paper-sunk" />
+            <div className="sweep relative h-4 w-3/5 overflow-hidden bg-paper-sunk" style={{ animationDelay: "120ms" }} />
+          </div>
+          <div className="mt-6">
+            <StageList stage={stage} />
+          </div>
+        </>
       )}
 
       {text && (

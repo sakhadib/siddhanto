@@ -51,7 +51,7 @@ service cloud.firestore {
 
     match /decisions/{doc} {
       allow create: if request.resource.data.keys().hasOnly(
-                          ['createdAt', 'state', 'questions', 'jev', 'meta', 'error'])
+                          ['createdAt', 'state', 'questions', 'jev', 'meta', 'error', 'source'])
         && request.resource.data.keys().hasAll(['createdAt', 'meta'])
         && request.resource.data.createdAt == request.time
         && (request.resource.data.state == null
@@ -62,9 +62,26 @@ service cloud.firestore {
                 && validAllQuestions(request.resource.data.questions)))
         && validJev(request.resource.data.jev)
         && validMeta(request.resource.data.meta)
-        && validError(request.resource.data.error);
+        && validError(request.resource.data.error)
+        && validSource(request.resource.data.source);
 
       allow read, update, delete: if false;
+    }
+
+    // The author's original text when it is not what the model read. null for
+    // English submissions. Keeping both makes every non-English row a usable
+    // bilingual pair.
+    function validSource(src) {
+      return src == null || (
+        src is map
+        && src.keys().hasOnly(['lang', 'state', 'questions'])
+        && src.keys().hasAll(['lang', 'state', 'questions'])
+        && src.lang in ['en', 'bn']
+        && isStr(src.state, 1300)
+        && src.questions is list
+        && src.questions.size() <= 10
+        && validAllQuestions(src.questions)
+      );
     }
 
     function validAllQuestions(qs) {
@@ -134,14 +151,16 @@ service cloud.firestore {
 
     function validAdvice(a) {
       return a.keys().hasOnly(
-                          ['decisionId', 'advisedAt', 'text', 'complete', 'model',
-                           'answerCount', 'answerTypes', 'meanConfidence', 'meta'])
-        && a.keys().hasAll(['decisionId', 'advisedAt', 'text', 'complete', 'meta'])
+                          ['decisionId', 'advisedAt', 'text', 'textEn', 'lang', 'complete',
+                           'model', 'answerCount', 'answerTypes', 'meanConfidence', 'meta'])
+        && a.keys().hasAll(['decisionId', 'advisedAt', 'text', 'lang', 'complete', 'meta'])
         && isStr(a.decisionId, 40)
         && a.decisionId.size() > 0
         && a.advisedAt == request.time
         && isStr(a.text, 2000)
         && a.text.size() > 0
+        && (a.textEn == null || isStr(a.textEn, 2000))
+        && a.lang in ['en', 'bn']
         && a.complete is bool
         && isStr(a.model, 80)
         && a.answerCount is number

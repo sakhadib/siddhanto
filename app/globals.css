@@ -8,7 +8,9 @@
    ========================================================================== */
 
 @theme {
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Plex first, Hind Siliguri second: the browser falls through per glyph, so
+     Latin keeps Plex and Bangla picks up Siliguri. */
+  --font-sans: var(--font-plex-sans), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
 
   /* Paper — warm bone. Never #fff. */

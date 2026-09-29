@@ -3,8 +3,9 @@ import { z } from "zod";
 import type { Answer } from "@/lib/jev";
 import { questionSchema } from "@/lib/validate";
 import { AdviseError, streamAdvise } from "@/lib/advise";
-import { ADVISE_ERR } from "@/lib/advise-protocol";
-import { hashAnswers, verifyReceipt } from "@/lib/receipt";
+import { translateText } from "@/lib/translate";
+import { ADVISE_ERR, statusFrame } from "@/lib/advise-protocol";
+import { hashAnswers, hashPrompt, verifyReceipt } from "@/lib/receipt";
 import { recordAdvice } from "@/lib/firestore";
 import { checkRateLimit, RATE_POLICY } from "@/lib/ratelimit";
 
@@ -69,6 +70,10 @@ export async function POST(req: NextRequest) {
   const verdict = verifyReceipt(parsed.data.receipt);
   if (!verdict.ok) return Response.json({ error: verdict.reason }, { status: 403 });
 
+  if (hashPrompt(parsed.data.state, parsed.data.questions) !== verdict.payload.promptHash) {
+    return Response.json({ error: "Text does not match the recorded decision" }, { status: 403 });
+  }
+
   const answers = parsed.data.answers as Record<string, Answer>;
   if (hashAnswers(answers) !== verdict.payload.answersHash) {
     return Response.json(
@@ -89,17 +94,41 @@ export async function POST(req: NextRequest) {
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      // English is always what the model writes. For a Bangla reader we hold
+      // it, translate once, and emit Bangla — so the paragraph arrives in one
+      // piece instead of trickling. Both texts are kept for storage.
+      let shown = "";
       try {
         for await (const delta of streamAdvise(state, questions, answers)) {
           if (aborted) break;
           full += delta;
-          controller.enqueue(encoder.encode(delta));
+          if (verdict.payload.sourceLang === "en") {
+            controller.enqueue(encoder.encode(delta));
+          }
         }
+
+        if (full.trim() && verdict.payload.sourceLang === "bn" && !aborted) {
+          // Tell the reader the second wait has begun, so it is not read as a
+          // stalled stream. Sent before the translation call, never after.
+          controller.enqueue(encoder.encode(statusFrame("translating into bangla")));
+          try {
+            shown = await translateText(full.trim(), "bn");
+            controller.enqueue(encoder.encode(shown));
+          } catch (e) {
+            // Falling back to the English is better than showing nothing.
+            console.error("[advise] translate-out failed, falling back to English:", e);
+            shown = full;
+            controller.enqueue(encoder.encode(full));
+          }
+        } else {
+          shown = full;
+        }
+
         // A reasoning model can finish its budget without ever emitting
         // visible content. Closing the stream here would be indistinguishable
         // from success, and the reader would show "Reading" with nothing
         // under it — so fail in-band instead.
-        if (!full.trim() && !aborted) {
+        if (!shown.trim() && !aborted) {
           failed = true;
           controller.enqueue(
             encoder.encode(ADVISE_ERR + "The reading model returned no text.")
@@ -124,7 +153,9 @@ export async function POST(req: NextRequest) {
         if (full.trim()) {
           await recordAdvice({
             receipt: verdict.payload,
-            text: full.trim().slice(0, 2000),
+            text: shown.trim().slice(0, 2000),
+            textEn: full.trim().slice(0, 2000),
+            lang: verdict.payload.sourceLang,
             complete: !failed && !aborted,
             meta: { ip, userAgent, referer, timeOnFormMs: 0 },
           });

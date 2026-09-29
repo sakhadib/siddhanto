@@ -1,6 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import type { Answer } from "./jev";
 import { RATING_LIMITS, type ReceiptPayload } from "./rating";
+import type { Lang } from "./lang";
 
 /* ==========================================================================
    Signed receipts. A mini-JWT: base64url(payload).hmac.
@@ -40,7 +41,18 @@ export function hashAnswers(answers: Record<string, Answer>): string {
   return createHash("sha256").update(JSON.stringify(answers)).digest("hex");
 }
 
-export function summariseAnswers(model: string, id: string, answers: Record<string, Answer>) {
+/** Stable hash of the English state + questions the Reading is built from. */
+export function hashPrompt(state: string, questions: unknown): string {
+  return createHash("sha256").update(JSON.stringify([state, questions])).digest("hex");
+}
+
+export function summariseAnswers(
+  model: string,
+  id: string,
+  answers: Record<string, Answer>,
+  sourceLang: Lang = "en",
+  promptHash = ""
+) {
   const list = Object.values(answers);
   const answerTypes = list.map((a) => a.type);
 
@@ -61,6 +73,8 @@ export function summariseAnswers(model: string, id: string, answers: Record<stri
 
   const payload: ReceiptPayload = {
     id,
+    sourceLang,
+    promptHash,
     answersHash: hashAnswers(answers),
     model,
     issuedAt: Date.now(),
@@ -110,6 +124,12 @@ export function verifyReceipt(receipt: string): VerifyResult {
 
   if (typeof payload?.id !== "string" || !/^[A-Za-z0-9]{8,40}$/.test(payload.id)) {
     return { ok: false, reason: "Receipt is missing a valid decision id" };
+  }
+  if (payload.sourceLang !== "en" && payload.sourceLang !== "bn") {
+    return { ok: false, reason: "Receipt is missing a valid source language" };
+  }
+  if (typeof payload.promptHash !== "string" || !/^[0-9a-f]{64}$/.test(payload.promptHash)) {
+    return { ok: false, reason: "Receipt is missing a valid prompt hash" };
   }
   if (typeof payload.answersHash !== "string" || !/^[0-9a-f]{64}$/.test(payload.answersHash)) {
     return { ok: false, reason: "Receipt is missing a valid answers hash" };
