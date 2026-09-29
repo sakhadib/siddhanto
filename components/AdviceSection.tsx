@@ -63,10 +63,28 @@ export default function AdviceSection({
   const [phase, setPhase] = useState<Phase>("streaming");
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // A stream that never produces a token would otherwise sit on
+  // "composing…" forever with no explanation.
+  const STALL_MS = 45_000;
 
   useEffect(() => {
+    // Note: no "already fired for this receipt" guard here. React StrictMode
+    // mounts, unmounts and remounts, and a ref guard makes the second mount
+    // return early — leaving the first (aborted) request as the only one, so
+    // nothing ever loads. Re-running and aborting the first is the correct
+    // pattern; the duplicate cost is dev-only, and production mounts once.
     const ac = new AbortController();
     abortRef.current = ac;
+    let stall: ReturnType<typeof setTimeout> | undefined;
+    let stalled = false;
+    const bump = () => {
+      if (stall) clearTimeout(stall);
+      stall = setTimeout(() => {
+        stalled = true;
+        ac.abort();
+      }, STALL_MS);
+    };
+    bump();
 
     (async () => {
       try {
@@ -90,6 +108,7 @@ export default function AdviceSection({
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
+          bump();
           buffer += decoder.decode(value, { stream: true });
           // Strip any sentinel as it arrives so a mid-stream failure never
           // flashes raw control characters into the prose.
@@ -107,17 +126,36 @@ export default function AdviceSection({
         if (final.error) {
           setError(final.error);
           setPhase("error");
+        } else if (!final.text.trim()) {
+          // The stream ended cleanly but carried no prose. This happened for
+          // real: a 200 with zero body bytes rendered as "Reading" and nothing
+          // under it, which is indistinguishable from a bug to the user.
+          setError("The reading layer returned an empty response.");
+          setPhase("error");
         } else {
           setPhase("done");
         }
       } catch (e) {
-        if (ac.signal.aborted) return;
+        if (ac.signal.aborted) {
+          // Only report if the stall timer ended it; a genuine unmount
+          // aborts too and should leave no trace.
+          if (stalled) {
+            setError("The reading layer stopped responding.");
+            setPhase("error");
+          }
+          return;
+        }
         setError(e instanceof Error ? e.message : "The reading layer is unavailable.");
         setPhase("error");
+      } finally {
+        if (stall) clearTimeout(stall);
       }
     })();
 
-    return () => ac.abort();
+    return () => {
+      if (stall) clearTimeout(stall);
+      ac.abort();
+    };
     // Re-run only if the receipt changes, i.e. a new decision was recorded.
   }, [receipt]); // eslint-disable-line react-hooks/exhaustive-deps
 

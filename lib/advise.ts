@@ -160,7 +160,13 @@ export async function* streamAdvise(
     model: MODEL,
     stream: true,
     temperature: 0.3,
-    max_tokens: 220,
+    // The reading model is a reasoning model: it streams `delta.reasoning`
+    // with an empty `delta.content` while it thinks, and those tokens count
+    // against max_tokens. At 220 it regularly spent the whole budget
+    // reasoning and emitted no visible text at all, which surfaced as an
+    // empty 200 the user saw as "Reading" followed by nothing. The budget has
+    // to cover reasoning plus a three-to-five sentence answer.
+    max_tokens: 1500,
     messages: buildAdviseMessages(state, questions, answers),
   });
 

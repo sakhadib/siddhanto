@@ -95,6 +95,16 @@ export async function POST(req: NextRequest) {
           full += delta;
           controller.enqueue(encoder.encode(delta));
         }
+        // A reasoning model can finish its budget without ever emitting
+        // visible content. Closing the stream here would be indistinguishable
+        // from success, and the reader would show "Reading" with nothing
+        // under it — so fail in-band instead.
+        if (!full.trim() && !aborted) {
+          failed = true;
+          controller.enqueue(
+            encoder.encode(ADVISE_ERR + "The reading model returned no text.")
+          );
+        }
       } catch (e) {
         // The stream has already begun, so the status code is long gone.
         // Surface the failure in-band; the client strips the sentinel.
