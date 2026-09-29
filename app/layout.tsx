@@ -77,9 +77,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="border-t border-rule py-6">
             <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-meta font-medium tracking-[0.14em] text-ink-faint uppercase">
               <p>Siddhanto — structured decisions, calibrated probabilities.</p>
-              <a href="/privacy" className="press text-ink-soft underline decoration-rule-strong underline-offset-4 hover:text-signal hover:decoration-signal">
-                Privacy &amp; data policy
-              </a>
+              <div className="flex flex-wrap items-center gap-5">
+                <a href="/about" className="press text-ink-soft underline decoration-rule-strong underline-offset-4 hover:text-signal hover:decoration-signal">
+                  About
+                </a>
+                <a href="/privacy" className="press text-ink-soft underline decoration-rule-strong underline-offset-4 hover:text-signal hover:decoration-signal">
+                  Privacy &amp; data policy
+                </a>
+              </div>
             </div>
           </footer>
         </div>

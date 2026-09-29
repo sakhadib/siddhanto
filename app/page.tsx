@@ -185,6 +185,22 @@ export default function Home() {
             the right and have the form built for you. The model returns calibrated numbers, and
             the confidence figure describes the distribution rather than the winner.
           </p>
+          <div className="mt-5 flex flex-wrap items-center gap-5">
+            <button
+              type="button"
+              onClick={refresh}
+              disabled={loading}
+              className="press font-mono text-[12px] tracking-[0.16em] text-ink-soft uppercase underline decoration-rule-strong underline-offset-[5px] transition-colors hover:text-signal hover:decoration-signal disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              New question
+            </button>
+            <a
+              href="/about"
+              className="press font-mono text-[12px] tracking-[0.16em] text-ink-soft uppercase underline decoration-rule-strong underline-offset-[5px] transition-colors hover:text-signal hover:decoration-signal"
+            >
+              About Siddhanto
+            </a>
+          </div>
         </div>
       </section>
 
@@ -287,20 +303,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={refresh}
-              disabled={loading}
-              className="press w-full border-2 border-rule-strong px-6 py-4 font-mono text-[15px] tracking-[0.18em] text-ink-soft uppercase transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              New question
-            </button>
-            <p className="max-w-[52ch] text-note text-ink-faint">
-              Clears the form and starts a new session. Nothing recorded so far is
-              affected.
-            </p>
-          </div>
+
 
           {error && (
             <div className="rise">
