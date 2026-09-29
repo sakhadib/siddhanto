@@ -13,10 +13,21 @@ const buckets = new Map<string, Bucket>();
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
-const MAX_PER_HOUR = 10;
-const MAX_PER_DAY = 50;
 
-export function checkRateLimit(ip: string): { allowed: boolean; reason?: string } {
+export interface LimitPolicy {
+  perHour: number;
+  perDay: number;
+  label: string;
+}
+
+export const DECIDE_POLICY: LimitPolicy = { perHour: 10, perDay: 50, label: "decision" };
+/** Ratings are far cheaper than a JEV call and blocked only to stop free-text spam. */
+export const RATE_POLICY: LimitPolicy = { perHour: 30, perDay: 120, label: "rating" };
+
+export function checkRateLimit(
+  ip: string,
+  policy: LimitPolicy = DECIDE_POLICY
+): { allowed: boolean; reason?: string } {
   const now = Date.now();
   let b = buckets.get(ip);
   if (!b) {
@@ -31,8 +42,12 @@ export function checkRateLimit(ip: string): { allowed: boolean; reason?: string 
     b.dayStart = now;
     b.dayCount = 0;
   }
-  if (b.hourCount >= MAX_PER_HOUR) return { allowed: false, reason: "Hourly limit reached (10/hour)" };
-  if (b.dayCount >= MAX_PER_DAY) return { allowed: false, reason: "Daily limit reached (50/day)" };
+  if (b.hourCount >= policy.perHour) {
+    return { allowed: false, reason: `Hourly ${policy.label} limit reached (${policy.perHour}/hour)` };
+  }
+  if (b.dayCount >= policy.perDay) {
+    return { allowed: false, reason: `Daily ${policy.label} limit reached (${policy.perDay}/day)` };
+  }
   b.hourCount += 1;
   b.dayCount += 1;
   return { allowed: true };

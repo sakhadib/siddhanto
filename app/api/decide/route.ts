@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { decideRequestSchema } from "@/lib/validate";
 import { callJev, JevError } from "@/lib/jev";
 import { recordDecision } from "@/lib/firestore";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, DECIDE_POLICY } from "@/lib/ratelimit";
+import { mintReceipt, summariseAnswers } from "@/lib/receipt";
 
 export const runtime = "nodejs";
 
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. Rate limit.
-  const rl = checkRateLimit(ip);
+  const rl = checkRateLimit(ip, DECIDE_POLICY);
   if (!rl.allowed) {
     return NextResponse.json({ error: rl.reason }, { status: 429 });
   }
@@ -73,8 +74,27 @@ export async function POST(req: NextRequest) {
   // 5. Call JEV, record, respond.
   try {
     const jev = await callJev(parsed.data);
-    await recordDecision(parsed.data, jev, { ip, userAgent, referer, timeOnFormMs });
-    return NextResponse.json({ model: jev.model, answers: jev.answers, usage: jev.usage });
+    const decisionId = await recordDecision(parsed.data, jev, { ip, userAgent, referer, timeOnFormMs });
+
+    // Mint a signed receipt so this response can be rated later. The summary it
+    // carries is derived here from the JEV response, so the ratings collection
+    // is self-sufficient for calibration research. If minting fails (no
+    // RATING_SECRET configured) the decision still stands — just not rateable.
+    let receipt: string | undefined;
+    if (decisionId) {
+      try {
+        receipt = mintReceipt(summariseAnswers(jev.model, decisionId, jev.answers));
+      } catch (e) {
+        console.error("[decide] could not mint rating receipt:", e);
+      }
+    }
+
+    return NextResponse.json({
+      model: jev.model,
+      answers: jev.answers,
+      usage: jev.usage,
+      ...(receipt ? { receipt } : {}),
+    });
   } catch (e) {
     const status = e instanceof JevError ? e.status : 500;
     const message = e instanceof Error ? e.message : "Unknown error";

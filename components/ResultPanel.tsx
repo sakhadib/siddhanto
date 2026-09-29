@@ -34,7 +34,6 @@ function NoulView({ answer, i }: { answer: Extract<Answer, { type: "noul" }>; i:
       <Readout label="Probability true" value={pct(answer.noul)} i={i} />
       <div className="mt-4">
         <DecisionChart answer={answer} />
-        <Axis />
         <p className="tnum mt-2 font-mono text-[10px] text-ink-ghost">
           noul = {answer.noul.toFixed(4)} · no confidence is returned for noul
         </p>

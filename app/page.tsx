@@ -5,12 +5,16 @@ import { LIMITS, type Question } from "@/lib/validate";
 import type { Answer, JevUsage } from "@/lib/jev";
 import ResultPanel, { EmptyState, LoadingState } from "@/components/ResultPanel";
 import QuestionRow, { emptyQuestion, type DraftQuestion } from "@/components/QuestionRow";
+import RatingWidget from "@/components/RatingWidget";
 import { Field, InkButton, Notice, SectionLabel } from "@/components/primitives";
 
 interface ApiResult {
   model: string;
   answers: Record<string, Answer>;
   usage?: JevUsage;
+  /** Opaque signed receipt from the server; present only when the decision was
+   *  recorded and RATING_SECRET is configured. */
+  receipt?: string;
 }
 
 export default function Home() {
@@ -22,6 +26,8 @@ export default function Home() {
   const mountedAt = useRef(Date.now());
   const honeypotRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  // When the readout last rendered, so the widget can report time-to-rate.
+  const decidedAt = useRef(Date.now());
 
   function updateQuestion(i: number, q: DraftQuestion) {
     setQuestions((qs) => qs.map((old, j) => (j === i ? q : old)));
@@ -52,6 +58,7 @@ export default function Home() {
         throw new Error(issues || data.error || `Request failed (${res.status})`);
       }
       setResult(data);
+      decidedAt.current = Date.now();
       // On mobile the readout is below the fold — take them to it.
       if (window.innerWidth < 1024) {
         setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
@@ -173,12 +180,23 @@ export default function Home() {
         {/* ----------------------------------------------- readout rail */}
         <div ref={resultsRef} className="lg:sticky lg:top-8 lg:self-start">
           {result ? (
-            <ResultPanel
-              model={result.model}
-              answers={result.answers}
-              usage={result.usage}
-              questions={questions}
-            />
+            <>
+              <ResultPanel
+                model={result.model}
+                answers={result.answers}
+                usage={result.usage}
+                questions={questions}
+              />
+              {result.receipt && (
+                <div className="mt-8">
+                  <RatingWidget
+                    key={result.receipt}
+                    receipt={result.receipt}
+                    decidedAt={decidedAt.current}
+                  />
+                </div>
+              )}
+            </>
           ) : loading ? (
             <LoadingState />
           ) : (

@@ -45,11 +45,13 @@ function NoulChart({ answer }: { answer: Extract<Answer, { type: "noul" }> }) {
     const l: Layout = {
       ...BASE_LAYOUT,
       barmode: "stack",
-      margin: MARGIN,
-      xaxis: { ...axisCommon(), range: [0, 100], dtick: 25, title: undefined },
+      // Bottom margin leaves room for Plotly's own 0-100 tick labels — the
+      // chart owns the axis, so nothing is drawn beneath it.
+      margin: { l: 2, r: 2, t: 2, b: 22 },
+      xaxis: { ...axisCommon(), range: [0, 100], dtick: 25, ticksuffix: "%" },
       yaxis: { showgrid: false, showticklabels: false, zeroline: false, fixedrange: true },
     };
-    return { data: d, layout: l, height: 76 };
+    return { data: d, layout: l, height: 92 };
   }, [p]);
 
   return (
@@ -87,7 +89,7 @@ function ChoiceChart({ answer }: { answer: Extract<Answer, { type: "choice" }> }
     const l: Layout = {
       ...BASE_LAYOUT,
       bargap: 0.34,
-      margin: { ...MARGIN, l: 4, r: 4 },
+      margin: { ...MARGIN, l: 4, r: 4, b: 22 },
       xaxis: { ...axisCommon(), range: [0, 100], dtick: 25 },
       yaxis: {
         showgrid: false,

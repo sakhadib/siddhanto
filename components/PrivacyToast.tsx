@@ -45,7 +45,8 @@ export default function PrivacyToast() {
         </button>
       </div>
       <p className="mt-2.5 text-[12px] leading-relaxed text-ink-soft">
-        Every submission is recorded, including the ones the model rejects. Read the{" "}
+        Every submission is recorded, including the ones the model rejects, and you can
+        optionally rate a response or leave a note. Read the{" "}
         <a
           href="/privacy"
           className="text-ink underline decoration-rule-strong underline-offset-4 hover:decoration-signal"

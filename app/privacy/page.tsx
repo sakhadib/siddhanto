@@ -67,6 +67,34 @@ export default function Privacy() {
       </section>
 
       <section className="rise" style={{ "--i": 3 } as React.CSSProperties}>
+        <H>Ratings and written notes</H>
+        <p className="text-[14px] leading-relaxed text-ink-soft">
+          If you choose to rate a response, the following is stored alongside it:
+        </p>
+        <ul className="mt-3">
+          <Item>
+            Your <strong className="font-medium text-ink">1–5 usefulness score</strong>, and
+            how long the response was on screen before you rated it.
+          </Item>
+          <Item>
+            Any <strong className="font-medium text-ink">written note</strong> you choose to
+            add. This is free text you type, it is not screened before it is stored, and it
+            may be quoted in aggregate research. Please do not include personal details in
+            it.
+          </Item>
+          <Item>
+            Figures describing the response itself — the model build, the question types, the
+            model&apos;s own confidence and the highest probability it returned. These are
+            calculated on our server, not sent by your browser.
+          </Item>
+        </ul>
+        <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">
+          Rating is entirely optional and the response is unaffected if you skip it. There is
+          at most one rating per response, and re-rating replaces it.
+        </p>
+      </section>
+
+      <section className="rise" style={{ "--i": 4 } as React.CSSProperties}>
         <H>What is not collected</H>
         <ul>
           <Item>No accounts, names, email addresses or passwords.</Item>
@@ -76,7 +104,7 @@ export default function Privacy() {
         </ul>
       </section>
 
-      <section className="rise" style={{ "--i": 4 } as React.CSSProperties}>
+      <section className="rise" style={{ "--i": 5 } as React.CSSProperties}>
         <H>How submissions are processed</H>
         <p className="text-[14px] leading-relaxed text-ink-soft">
           To produce a decision, your text is sent to{" "}
@@ -87,7 +115,7 @@ export default function Privacy() {
         </p>
       </section>
 
-      <section className="rise" style={{ "--i": 5 } as React.CSSProperties}>
+      <section className="rise" style={{ "--i": 6 } as React.CSSProperties}>
         <H>Retrieval and deletion</H>
         <p className="text-[14px] leading-relaxed text-ink-soft">
           Submissions are not tied to any identity, so a specific person&apos;s data cannot be

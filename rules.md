@@ -7,6 +7,10 @@ Paste the block below into **Firebase Console → Firestore Database → Rules**
 
 - `decisions` is **create-only** — nobody can read, update, or delete funnel data
   from a client. (Read it in the Firebase console or via Admin SDK scripts.)
+- `ratings` accepts create and update only, keyed `r_<decisionId>` so there is
+  at most one rating per response and it can be revised. Reads and deletes are
+  denied. Every descriptive field in a rating is derived server-side from the
+  signed receipt, not from the browser.
 - Writes must match the exact shape `lib/firestore.ts` (`recordDecision`) produces.
 - Size caps mirror the app's limits (state ≤1300 chars, ≤10 questions,
   instructions ≤512 chars) so rules alone can't be used to dump huge payloads.
@@ -106,6 +110,56 @@ service cloud.firestore {
       );
     }
 
+    // ---------- ratings (research) ----------
+    // One rating per decision, keyed r_<decisionId>, so a response cannot
+    // accumulate unbounded ratings. Read and delete stay denied: a rating is
+    // research input, not something a client can browse back.
+    // meanConfidence / peakProbability are null when every answer was a noul
+    // (noul carries no confidence) — explicitly allowed.
+    match /ratings/{doc} {
+      allow create, update: if validRating(request.resource.data);
+
+      allow read, delete: if false;
+    }
+
+    function validRating(r) {
+      return r.keys().hasOnly(
+                          ['decisionId', 'ratedAt', 'score', 'comment', 'model',
+                           'answerCount', 'answerTypes', 'meanConfidence',
+                           'peakProbability', 'meta'])
+        && r.keys().hasAll(['decisionId', 'ratedAt', 'score', 'answerCount', 'meta'])
+        && isStr(r.decisionId, 40)
+        && r.decisionId.size() > 0
+        && r.ratedAt == request.time
+        && r.score is number
+        && r.score >= 1
+        && r.score <= 5
+        && (r.comment == null || isStr(r.comment, 600))
+        && isStr(r.model, 80)
+        && r.answerCount is number
+        && r.answerCount >= 1
+        && r.answerCount <= 10
+        && r.answerTypes is list
+        && r.answerTypes.size() >= 1
+        && r.answerTypes.size() <= 10
+        && (r.meanConfidence == null
+            || (r.meanConfidence is number && r.meanConfidence >= 0 && r.meanConfidence <= 1))
+        && (r.peakProbability == null
+            || (r.peakProbability is number && r.peakProbability >= 0 && r.peakProbability <= 1))
+        && validRatingMeta(r.meta);
+    }
+
+    function validRatingMeta(meta) {
+      return meta is map
+        && meta.keys().hasOnly(['ipHash', 'userAgent', 'referer', 'timeToRateMs'])
+        && meta.keys().hasAll(['ipHash', 'userAgent', 'referer', 'timeToRateMs'])
+        && isStr(meta.ipHash, 64)
+        && isStr(meta.userAgent, 320)
+        && isStr(meta.referer, 520)
+        && meta.timeToRateMs is number
+        && meta.timeToRateMs >= 0;
+    }
+
     // ---------- deny everything else ----------
     match /{document=**} {
       allow read, write: if false;
@@ -120,6 +174,23 @@ service cloud.firestore {
 2. Re-run the app and submit a decision — the server log should stop showing
    `PERMISSION_DENIED`, and documents should appear under `decisions` in the
    Firestore data viewer.
+
+### Ratings will not save until you republish
+
+The `ratings` block is new. Until the rules above are published, a rating
+POST returns **502 `Could not record the rating.`** and the write fails with
+`PERMISSION_DENIED` — the `decisions` block and the `ratings` block live in
+the same ruleset, so publishing one publishes both. The app surfaces the
+failure in the UI rather than dropping the rating silently.
+
+Verify with:
+
+```bash
+curl -X POST http://localhost:3000/api/rate \
+  -H 'Content-Type: application/json' \
+  -d '{"receipt":"<receipt from /api/decide>","score":4,"meta":{"timeToRateMs":1000}}'
+# expect {"ok":true}, not a 502
+```
 
 ## Notes
 
