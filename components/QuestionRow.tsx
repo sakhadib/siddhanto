@@ -96,7 +96,7 @@ export default function QuestionRow({
                   className={`press -mb-px border-b-2 pb-2 font-mono text-[12.5px] tracking-[0.14em] uppercase ${
                     active
                       ? "border-signal text-ink"
-                      : "border-transparent text-ink-ghost hover:text-ink-soft"
+                      : "border-transparent text-ink-faint hover:text-ink-soft"
                   }`}
                 >
                   {t}

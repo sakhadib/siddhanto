@@ -71,7 +71,7 @@ export default function RatingWidget({
   }
 
   return (
-    <section className="rise border-t-2 border-ink pt-4" style={{ "--i": 1 } as React.CSSProperties}>
+    <section className="rise border-t-2 border-ink pt-5" style={{ "--i": 1 } as React.CSSProperties}>
       <SectionLabel meta="optional">Rate this response</SectionLabel>
 
       {phase === "done" && !commentOpen && score !== null ? (

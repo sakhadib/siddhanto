@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[1400px] flex-col px-5 sm:px-8">
           {/* Masthead — a drafting title block: rules above and below, no box. */}
           <header className="rise border-t-2 border-ink pt-4 [--i:0]" style={{ "--i": 0 } as React.CSSProperties}>
-            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 pb-3">
+            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
               <a href="/" aria-label="Siddhanto home" className="press inline-block">
                 <Image
                   src="/logo.png"
@@ -59,7 +59,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="hidden sm:inline">no / true / false</span>
               </p>
             </div>
-            <div className="border-b border-rule" />
           </header>
 
           <main className="flex-1 pb-16">{children}</main>

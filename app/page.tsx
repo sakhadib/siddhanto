@@ -95,7 +95,7 @@ export default function Home() {
 
       <div className="grid gap-12 border-t-2 border-ink pt-8 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
         {/* ------------------------------------------------ input rail */}
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-12">
           <SectionLabel>Input</SectionLabel>
 
           <section className="rise" style={{ "--i": 1 } as React.CSSProperties}>
@@ -118,9 +118,9 @@ export default function Home() {
               Queries
             </SectionLabel>
 
-            <div className="mt-5 flex flex-col gap-8">
+            <div className="mt-6 flex flex-col gap-11">
               {questions.map((q, i) => (
-                <div key={i} className="border-b border-rule pb-8 last:border-b-0 last:pb-0">
+                <div key={i} className="pb-10 last:pb-0">
                   <QuestionRow
                     index={i}
                     total={questions.length}

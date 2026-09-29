@@ -10,7 +10,7 @@ import { Axis, MeasureBar, Readout, SectionLabel, pct } from "@/components/primi
 
 function Confidence({ value, i }: { value: number; i: number }) {
   return (
-    <div className="mt-5 border-t border-rule pt-3">
+    <div className="mt-7">
       <div className="flex items-baseline justify-between gap-3">
         <span className="font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">
           Confidence
@@ -55,7 +55,7 @@ function ChoiceView({ answer, i }: { answer: Extract<Answer, { type: "choice" }>
         {entries.map(([label, p]) => {
           const isWinner = label === answer.choice;
           return (
-            <div key={label} className="flex items-baseline gap-3 border-b border-rule py-1.5 last:border-b-0">
+            <div key={label} className="flex items-baseline gap-3 py-2">
               <dt className={`min-w-0 flex-1 text-row ${isWinner ? "font-medium text-ink" : "text-ink-soft"}`}>
                 {isWinner && (
                   <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 shrink-0 translate-y-[-1px] bg-signal" />
@@ -88,14 +88,14 @@ function ScoreView({ answer, i }: { answer: Extract<Answer, { type: "score" }>; 
         <div className="mt-1">
           <DecisionChart answer={answer} />
         </div>
-        <ul className="mt-2 flex flex-col">
+        <ul className="mt-2 flex flex-col divide-y divide-transparent">
           {levels.map(([idx, desc], k) => {
             const p = answer.probabilities[idx] ?? 0;
             const isPeak = k === Math.round(answer.score);
             return (
               <li
                 key={idx}
-                className="flex items-baseline gap-3 border-b border-rule py-1.5 last:border-b-0"
+                className="flex items-baseline gap-3 py-2"
               >
                 <span className="tnum w-4 shrink-0 text-right font-mono text-[12px] text-ink-faint">
                   {idx}
@@ -178,9 +178,9 @@ export default function ResultPanel({
         Readout
       </SectionLabel>
 
-      <div className="mt-4 flex flex-col">
+      <div className="mt-5 flex flex-col">
         {list.map(([id, answer], i) => (
-          <article key={id} className="border-t border-rule py-6 first:border-t-0 first:pt-0">
+          <article key={id} className="py-8 first:pt-0">
             <div className="mb-4">
               <p className="font-mono text-label font-medium tracking-[0.16em] text-ink-soft uppercase">
                 Query {String(i + 1).padStart(2, "0")} · {answer.type}
@@ -197,7 +197,7 @@ export default function ResultPanel({
         ))}
       </div>
 
-      <p className="tnum border-t border-rule pt-3.5 font-mono text-meta leading-relaxed text-ink-faint">
+      <p className="tnum mt-3 font-mono text-meta leading-relaxed text-ink-faint">
         {model}
         {usage ? ` · ${usage.input_tokens} in / ${usage.output_tokens} out` : ""}
         {usage?.cost != null ? ` · $${usage.cost.toFixed(6)}` : ""}

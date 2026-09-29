@@ -26,20 +26,25 @@ function vars(props: Record<string, string | number>): CSSProperties {
 export function SectionLabel({
   children,
   meta,
+  rule = false,
   className = "",
 }: {
   children: ReactNode;
   meta?: ReactNode;
+  /** Opt-in only. A rule behind every label is what turned the page into
+   *  ruled paper — roughly forty horizontals and one vertical. Structure now
+   *  comes from spacing and type weight; rules are reserved for meaning. */
+  rule?: boolean;
   className?: string;
 }) {
   return (
-    <div className={`flex items-baseline gap-3 ${className}`}>
-      <span className="shrink-0 font-mono text-label font-medium tracking-[0.16em] text-ink uppercase">
+    <div className={`flex items-baseline ${rule ? "gap-3" : "gap-2.5"} ${className}`}>
+      <span className="font-mono text-label font-medium tracking-[0.16em] text-ink uppercase">
         {children}
       </span>
-      <span aria-hidden className="h-px flex-1 bg-rule" />
+      {rule && <span aria-hidden className="h-px flex-1 bg-rule" />}
       {meta !== undefined && (
-        <span className="tnum shrink-0 font-mono text-meta text-ink-faint">{meta}</span>
+        <span className="tnum font-mono text-meta text-ink-faint">{meta}</span>
       )}
     </div>
   );

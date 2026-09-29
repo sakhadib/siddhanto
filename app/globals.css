@@ -150,7 +150,6 @@
      inputs read as places you write rather than as more blank paper. */
   .channel {
     background-color: var(--color-paper-sunk);
-    border-top: 1px solid var(--color-rule);
     border-bottom: 1px solid var(--color-rule-strong);
     transition:
       background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
