@@ -51,6 +51,10 @@ export default function Privacy() {
             every option, level and criterion you define.
           </Item>
           <Item>
+            The generated <strong className="font-medium text-ink">Reading</strong> — the
+            written interpretation of those numbers, and the figures it was written from.
+          </Item>
+          <Item>
             The <strong className="font-medium text-ink">answers</strong> the model returns —
             probabilities, the selected option, expected values, and confidence figures.
           </Item>
@@ -112,6 +116,19 @@ export default function Privacy() {
           <strong className="font-medium text-ink">TypeSafe Jev</strong> model. Their own
           privacy policies govern that processing. As with any online tool, please do not paste
           sensitive personal details into the form.
+        </p>
+        <p className="mt-4 text-[15.5px] leading-relaxed text-ink-soft">
+          The written <em>Reading</em> shown beneath the results is produced by a{" "}
+          <strong className="font-medium text-ink">second, separate language model</strong>{" "}
+          through OpenRouter. It receives the situation you wrote, your queries, and the
+          numeric output above, and it writes a short interpretation of those numbers. We do
+          not publish which model that is. It is given instructions to interpret rather than
+          advise, and it is not shown your identity, your IP address, or your rating.
+        </p>
+        <p className="mt-4 text-[15.5px] leading-relaxed text-ink-soft">
+          That generated text is stored against your decision, together with the figures it was
+          written from, so we can study whether the reading is useful and whether it stays
+          consistent with the numbers. It may be quoted in aggregate research.
         </p>
       </section>
 

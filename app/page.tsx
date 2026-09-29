@@ -6,6 +6,7 @@ import type { Answer, JevUsage } from "@/lib/jev";
 import ResultPanel, { EmptyState, LoadingState } from "@/components/ResultPanel";
 import QuestionRow, { emptyQuestion, type DraftQuestion } from "@/components/QuestionRow";
 import RatingWidget from "@/components/RatingWidget";
+import AdviceSection from "@/components/AdviceSection";
 import { Field, InkButton, Notice, SectionLabel } from "@/components/primitives";
 
 interface ApiResult {
@@ -206,6 +207,19 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {/* The reading layer — full width, below both rails, so it lands as the
+          conclusion of the page. It only mounts once a decision is in hand,
+          and it streams on its own; the numbers above never wait for it. */}
+      {result?.receipt && (
+        <AdviceSection
+          key={result.receipt}
+          receipt={result.receipt}
+          state={state}
+          questions={questions as Question[]}
+          answers={result.answers}
+        />
+      )}
     </>
   );
 }

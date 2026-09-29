@@ -11,6 +11,8 @@ Paste the block below into **Firebase Console → Firestore Database → Rules**
   at most one rating per response and it can be revised. Reads and deletes are
   denied. Every descriptive field in a rating is derived server-side from the
   signed receipt, not from the browser.
+- `advice` accepts create and update only, keyed `a_<decisionId>`, same
+  posture.
 - Writes must match the exact shape `lib/firestore.ts` (`recordDecision`) produces.
 - Size caps mirror the app's limits (state ≤1300 chars, ≤10 questions,
   instructions ≤512 chars) so rules alone can't be used to dump huge payloads.
@@ -158,6 +160,48 @@ service cloud.firestore {
         && isStr(meta.referer, 520)
         && meta.timeToRateMs is number
         && meta.timeToRateMs >= 0;
+    }
+
+    // ---------- advice (the reading layer) ----------
+    // One narrative per decision, keyed a_<decisionId>. The text is written
+    // after the stream has already reached the browser, so a failure here
+    // loses the research record but never the user's reading.
+    match /advice/{doc} {
+      allow create, update: if validAdvice(request.resource.data);
+
+      allow read, delete: if false;
+    }
+
+    function validAdvice(a) {
+      return a.keys().hasOnly(
+                          ['decisionId', 'advisedAt', 'text', 'complete', 'model',
+                           'answerCount', 'answerTypes', 'meanConfidence', 'meta'])
+        && a.keys().hasAll(['decisionId', 'advisedAt', 'text', 'complete', 'meta'])
+        && isStr(a.decisionId, 40)
+        && a.decisionId.size() > 0
+        && a.advisedAt == request.time
+        && isStr(a.text, 2000)
+        && a.text.size() > 0
+        && a.complete is bool
+        && isStr(a.model, 80)
+        && a.answerCount is number
+        && a.answerCount >= 1
+        && a.answerCount <= 10
+        && a.answerTypes is list
+        && a.answerTypes.size() >= 1
+        && a.answerTypes.size() <= 10
+        && (a.meanConfidence == null
+            || (a.meanConfidence is number && a.meanConfidence >= 0 && a.meanConfidence <= 1))
+        && validAdviceMeta(a.meta);
+    }
+
+    function validAdviceMeta(meta) {
+      return meta is map
+        && meta.keys().hasOnly(['ipHash', 'userAgent', 'referer'])
+        && meta.keys().hasAll(['ipHash', 'userAgent', 'referer'])
+        && isStr(meta.ipHash, 64)
+        && isStr(meta.userAgent, 320)
+        && isStr(meta.referer, 520);
     }
 
     // ---------- deny everything else ----------

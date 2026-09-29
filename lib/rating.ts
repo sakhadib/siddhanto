@@ -33,6 +33,11 @@ export type RatingRequest = z.infer<typeof ratingRequestSchema>;
 export interface ReceiptPayload {
   /** Firestore document id of the decision being rated. */
   id: string;
+  /** sha256 of the serialised JEV answers this receipt was minted for.
+   *  /api/advise requires the submitted answers to hash to this, so the
+   *  narrative stored against a decision provably describes that decision's
+   *  real output rather than whatever the browser chose to send. */
+  answersHash: string;
   model: string;
   issuedAt: number;
   answerCount: number;

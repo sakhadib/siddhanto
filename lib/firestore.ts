@@ -55,6 +55,44 @@ export async function recordDecision(
   }
 }
 
+export interface AdviceInput {
+  receipt: ReceiptPayload;
+  text: string;
+  /** false when the stream aborted or errored part-way through. */
+  complete: boolean;
+  meta: RecordMeta;
+}
+
+/**
+ * Record the prose reading of a decision. One per decision, keyed
+ * a_<decisionId>, so re-asking replaces rather than appends. Written after the
+ * stream has already been delivered, and never throws.
+ */
+export async function recordAdvice(input: AdviceInput): Promise<boolean> {
+  try {
+    const { receipt } = input;
+    await setDoc(doc(db, "advice", `a_${receipt.id}`), {
+      decisionId: receipt.id,
+      advisedAt: serverTimestamp(),
+      text: input.text.slice(0, 2000),
+      complete: input.complete,
+      model: receipt.model,
+      answerCount: receipt.answerCount,
+      answerTypes: receipt.answerTypes,
+      meanConfidence: receipt.meanConfidence,
+      meta: {
+        ipHash: hashIp(input.meta.ip),
+        userAgent: input.meta.userAgent.slice(0, 300),
+        referer: input.meta.referer.slice(0, 500),
+      },
+    });
+    return true;
+  } catch (e) {
+    console.error("[firestore] recordAdvice failed:", e);
+    return false;
+  }
+}
+
 export interface RatingInput {
   receipt: ReceiptPayload;
   score: number;

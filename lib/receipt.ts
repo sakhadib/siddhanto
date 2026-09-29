@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import type { Answer } from "./jev";
 import { RATING_LIMITS, type ReceiptPayload } from "./rating";
 
@@ -34,6 +34,12 @@ function sign(body: string): string {
 }
 
 /** Derive the research summary from the answers the model actually returned. */
+/** Stable hash of the answers object, so a later request can prove it is
+ *  carrying the same model output the receipt was minted for. */
+export function hashAnswers(answers: Record<string, Answer>): string {
+  return createHash("sha256").update(JSON.stringify(answers)).digest("hex");
+}
+
 export function summariseAnswers(model: string, id: string, answers: Record<string, Answer>) {
   const list = Object.values(answers);
   const answerTypes = list.map((a) => a.type);
@@ -55,6 +61,7 @@ export function summariseAnswers(model: string, id: string, answers: Record<stri
 
   const payload: ReceiptPayload = {
     id,
+    answersHash: hashAnswers(answers),
     model,
     issuedAt: Date.now(),
     answerCount: list.length,
@@ -103,6 +110,9 @@ export function verifyReceipt(receipt: string): VerifyResult {
 
   if (typeof payload?.id !== "string" || !/^[A-Za-z0-9]{8,40}$/.test(payload.id)) {
     return { ok: false, reason: "Receipt is missing a valid decision id" };
+  }
+  if (typeof payload.answersHash !== "string" || !/^[0-9a-f]{64}$/.test(payload.answersHash)) {
+    return { ok: false, reason: "Receipt is missing a valid answers hash" };
   }
   if (
     typeof payload.issuedAt !== "number" ||
